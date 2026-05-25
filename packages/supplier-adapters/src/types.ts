@@ -75,7 +75,7 @@ export interface TrackingUpdate {
   carrier: string
   trackingNumber: string
   trackingUrl?: string
-  status: 'label_created' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'exception'
+  status: 'label_created' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'exception' | 'returned'
   estimatedDelivery?: Date
   deliveredAt?: Date
 }

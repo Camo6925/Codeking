@@ -8,9 +8,7 @@
   "scripts": {
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {
-    "@rr/db": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "typescript": "^5.4.5"
   }

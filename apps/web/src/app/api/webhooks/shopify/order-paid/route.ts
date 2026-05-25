@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { validateShopifyHmac } from '@/lib/utils/shopify-hmac'
-import { routeOrder } from '@rr/order-router/src/router'
+import { routeOrder } from '@rr/order-router'
 
 export async function POST(request: Request) {
   const rawBody = await request.text()

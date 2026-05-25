@@ -84,6 +84,10 @@ export async function routeOrder(shopifyPayload: ShopifyOrderPayload): Promise<O
       },
     })
 
+    if (!variant) {
+      console.warn(`[order-router] No variant found for shopifyVariantId=${lineItem.variant_id} sku=${lineItem.sku} — item will not be routed to a supplier`)
+    }
+
     const orderItem = await prisma.orderItem.create({
       data: {
         orderId: order.id,
@@ -99,7 +103,9 @@ export async function routeOrder(shopifyPayload: ShopifyOrderPayload): Promise<O
     })
 
     const preferredSupplier = variant?.product?.supplierProducts[0]
-    if (preferredSupplier) {
+    if (!preferredSupplier) {
+      console.warn(`[order-router] No preferred supplier for sku=${lineItem.sku} orderId=${order.id} — item will not be dispatched`)
+    } else {
       const supplierId = preferredSupplier.supplierId
       if (!itemsBySupplier.has(supplierId)) {
         itemsBySupplier.set(supplierId, { supplierId, items: [] })
@@ -111,12 +117,12 @@ export async function routeOrder(shopifyPayload: ShopifyOrderPayload): Promise<O
   const shippingAddress: ShippingAddress = {
     name: shopifyPayload.shipping_address.name,
     address1: shopifyPayload.shipping_address.address1,
-    address2: shopifyPayload.shipping_address.address2,
+    address2: shopifyPayload.shipping_address.address2 ?? undefined,
     city: shopifyPayload.shipping_address.city,
     province: shopifyPayload.shipping_address.province_code,
     zip: shopifyPayload.shipping_address.zip,
     country: shopifyPayload.shipping_address.country_code,
-    phone: shopifyPayload.shipping_address.phone,
+    phone: shopifyPayload.shipping_address.phone ?? undefined,
   }
 
   // Dispatch to each supplier
@@ -195,11 +201,11 @@ async function dispatchToSupplier(
   }
 }
 
-async function submitWithRetry<T>(
-  fn: (payload: T) => Promise<Awaited<ReturnType<typeof fn>>>,
+async function submitWithRetry<T, R>(
+  fn: (payload: T) => Promise<R>,
   payload: T,
   maxRetries = 3
-): Promise<Awaited<ReturnType<typeof fn>>> {
+): Promise<R> {
   let lastError: Error | undefined
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {

@@ -55,9 +55,12 @@ export async function runCatalogPipeline(options: PipelineOptions): Promise<Pipe
       result.productsFound++
       try {
         if (!dryRun) {
-          await upsertProduct(item, supplierId)
-          // Simplified: would check if created or updated
-          result.productsUpdated++
+          const wasCreated = await upsertProduct(item, supplierId)
+          if (wasCreated) {
+            result.productsCreated++
+          } else {
+            result.productsUpdated++
+          }
         }
       } catch (err) {
         result.errorCount++
@@ -90,7 +93,7 @@ export async function runCatalogPipeline(options: PipelineOptions): Promise<Pipe
   return result
 }
 
-async function upsertProduct(item: CatalogItem, supplierId: string): Promise<void> {
+async function upsertProduct(item: CatalogItem, supplierId: string): Promise<boolean> {
   const partNumber = normalizePartNumber(item.partNumber)
   const slug = slugify(`${item.brandName}-${partNumber}`)
 
@@ -113,6 +116,9 @@ async function upsertProduct(item: CatalogItem, supplierId: string): Promise<voi
       slug: item.categorySlug,
     },
   })
+
+  // Check if product exists to track created vs updated
+  const existingProduct = await prisma.product.findUnique({ where: { partNumber }, select: { id: true } })
 
   // Upsert product
   const product = await prisma.product.upsert({
@@ -138,6 +144,7 @@ async function upsertProduct(item: CatalogItem, supplierId: string): Promise<voi
       attributes: item.attributes,
     },
   })
+  const isNewProduct = !existingProduct
 
   // Upsert supplier product link
   await prisma.supplierProduct.upsert({
@@ -158,19 +165,19 @@ async function upsertProduct(item: CatalogItem, supplierId: string): Promise<voi
     const boltPattern = variant.boltPattern
       ? normalizeBoltPattern(variant.boltPattern)
       : undefined
+    const supplierVariantKey = `${supplierId}:${variant.supplierPartNum}`
     await prisma.productVariant.upsert({
-      where: { shopifyVariantId: variant.supplierPartNum }, // temp key until Shopify sync
+      where: { supplierVariantKey },
       update: { price: variant.priceCents, boltPattern },
       create: {
         productId: product.id,
-        shopifyVariantId: variant.supplierPartNum,
+        supplierVariantKey,
         diameter: variant.diameter,
         width: variant.width,
         finish: variant.finish,
         boltPattern,
         offset: variant.offset,
         price: variant.priceCents,
-        upc: variant.upc,
       },
     })
   }
@@ -195,4 +202,6 @@ async function upsertProduct(item: CatalogItem, supplierId: string): Promise<voi
       },
     })
   }
+
+  return isNewProduct
 }

@@ -1,0 +1,15 @@
+{
+  "name": "@rr/scripts",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "seed-vehicles": "tsx seed-vehicles.ts"
+  },
+  "dependencies": {
+    "@rr/db": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.9.3",
+    "typescript": "^5.4.5"
+  }
+}

@@ -61,13 +61,16 @@ model VehicleTrim {
   frontOffsetRange    String?  // "+15 to +30"
   rearOffsetRange     String?  // "+15 to +25"
   tpmsRequired        Boolean  @default(false)
-  // ACES cross-reference for fitment imports
-  acesBaseVehicleId   Int?
+  // ACES cross-reference — unique so it can be used as an upsert key
+  acesBaseVehicleId   Int?     @unique
 
   fitmentApplications FitmentApplication[]
   savedVehicles       SavedVehicle[]
   packageFitments     PackageFitment[]
+  builds              Build[]
 
+  // Composite unique enables reliable upsert by (model, trim name)
+  @@unique([modelId, name])
   @@index([modelId])
   @@map("vehicle_trims")
 }
@@ -91,9 +94,10 @@ model Supplier {
   minOrderAmount  Decimal? @db.Decimal(10, 2)
   supportsEdi     Boolean  @default(false)
 
-  supplierProducts SupplierProduct[]
-  supplierOrders   SupplierOrder[]
-  catalogSyncLogs  CatalogSyncLog[]
+  supplierProducts    SupplierProduct[]
+  supplierOrders      SupplierOrder[]
+  catalogSyncLogs     CatalogSyncLog[]
+  supplierInventories SupplierInventory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -195,8 +199,10 @@ model ProductVariant {
   // Pricing in cents
   price              Int
   compareAtPrice     Int?
-  // Shopify variant sync
+  // Shopify variant sync — null until Shopify product sync runs
   shopifyVariantId   String?            @unique
+  // Stable pre-Shopify-sync lookup key: "{supplierId}:{supplierPartNum}"
+  supplierVariantKey String?            @unique
   availabilityStatus AvailabilityStatus @default(UNKNOWN)
 
   supplierInventory SupplierInventory[]
@@ -269,6 +275,7 @@ model SupplierInventory {
   variantId     String
   variant       ProductVariant @relation(fields: [variantId], references: [id])
   supplierId    String
+  supplier      Supplier       @relation(fields: [supplierId], references: [id])
   qtyOnHand     Int            @default(0)
   qtyAvailable  Int            @default(0)
   warehouseCode String?
@@ -336,18 +343,19 @@ model PackageFitment {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Build {
-  id               String      @id @default(cuid())
+  id               String       @id @default(cuid())
   trimId           Int?
-  vehicleLabel     String      // Denormalized: "2022 Toyota Tacoma TRD Pro"
+  trim             VehicleTrim? @relation(fields: [trimId], references: [id])
+  vehicleLabel     String       // Denormalized: "2022 Toyota Tacoma TRD Pro"
   submitterName    String
   submitterEmail   String
   instagramHandle  String?
-  imageUrls        String[]    // Stored in Supabase Storage
-  caption          String?     @db.Text
-  featuredProducts Json?       // [{ productId, partNumber, name }]
-  status           BuildStatus @default(PENDING)
+  imageUrls        String[]     // Stored in Supabase Storage
+  caption          String?      @db.Text
+  featuredProducts Json?        // [{ productId, partNumber, name }]
+  status           BuildStatus  @default(PENDING)
   approvedAt       DateTime?
-  slug             String?     @unique
+  slug             String?      @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -479,6 +487,8 @@ model Shipment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Composite unique enables safe upsert in tracking poller
+  @@unique([orderId, trackingNumber])
   @@index([orderId])
   @@index([trackingNumber])
   @@map("shipments")

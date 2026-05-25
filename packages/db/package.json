@@ -8,6 +8,7 @@
     "migrate:dev": "prisma migrate dev",
     "studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
+    "prisma validate": "prisma validate",
     "type-check": "tsc --noEmit"
   },
   "exports": {

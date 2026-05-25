@@ -22,7 +22,7 @@ export const meyerAdapter: SupplierAdapter = {
     return []
   },
 
-  async *fetchFullCatalog(): AsyncGenerator<CatalogItem> {
+  async *fetchFullCatalog(): AsyncGenerator<CatalogItem, void> {
     console.warn('[Meyer] fetchFullCatalog: EDI 832 parser not yet implemented')
   },
 

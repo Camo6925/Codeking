@@ -228,8 +228,17 @@ async function main() {
 
         for (const trim of model.trims) {
           await prisma.vehicleTrim.upsert({
-            where: { id: trim.acesBaseVehicleId ?? 0 },
-            update: {},
+            where: { modelId_name: { modelId: modelRecord.id, name: trim.name } },
+            update: {
+              boltPattern: trim.boltPattern,
+              hubBore: trim.hubBore,
+              frontOffsetRange: trim.frontOffsetRange,
+              driveType: trim.driveType,
+              engineDesc: trim.engineDesc,
+              bodyStyle: trim.bodyStyle,
+              tpmsRequired: trim.tpmsRequired,
+              acesBaseVehicleId: trim.acesBaseVehicleId,
+            },
             create: {
               name: trim.name,
               modelId: modelRecord.id,

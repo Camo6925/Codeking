@@ -12,9 +12,7 @@
  * makes from 1900 to present.
  */
 
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@rr/db'
 const DRY_RUN = process.argv.includes('--dry-run')
 
 interface VehicleRecord {
@@ -88,28 +86,31 @@ async function main() {
       create: { name: record.model, slug: modelSlug, makeId: makeRecord.id },
     })
 
-    if (record.acesBaseVehicleId) {
-      const existing = await prisma.vehicleTrim.findFirst({
-        where: { acesBaseVehicleId: record.acesBaseVehicleId },
-      })
-      if (existing) { skipped++; continue }
+    const trimData = {
+      driveType: record.driveType,
+      engineDesc: record.engineDesc,
+      bodyStyle: record.bodyStyle,
+      boltPattern: record.boltPattern,
+      hubBore: record.hubBoreMm,
+      frontOffsetRange: record.frontOffsetRange,
+      tpmsRequired: record.tpmsRequired ?? false,
+      acesBaseVehicleId: record.acesBaseVehicleId,
     }
 
-    await prisma.vehicleTrim.create({
-      data: {
-        name: record.trim,
-        modelId: modelRecord.id,
-        driveType: record.driveType,
-        engineDesc: record.engineDesc,
-        bodyStyle: record.bodyStyle,
-        boltPattern: record.boltPattern,
-        hubBore: record.hubBoreMm,
-        frontOffsetRange: record.frontOffsetRange,
-        tpmsRequired: record.tpmsRequired ?? false,
-        acesBaseVehicleId: record.acesBaseVehicleId,
-      },
+    const existing = await prisma.vehicleTrim.findFirst({
+      where: { modelId_name: { modelId: modelRecord.id, name: record.trim } },
+      select: { id: true },
     })
-    created++
+
+    if (existing) {
+      await prisma.vehicleTrim.update({ where: { id: existing.id }, data: trimData })
+      skipped++
+    } else {
+      await prisma.vehicleTrim.create({
+        data: { name: record.trim, modelId: modelRecord.id, ...trimData },
+      })
+      created++
+    }
   }
 
   console.log(`Done. Created: ${created}, Skipped: ${skipped}`)

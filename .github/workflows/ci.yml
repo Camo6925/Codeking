@@ -56,7 +56,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate Prisma schema
-        run: pnpm --filter @rr/db exec prisma validate
+        run: pnpm --filter @rr/db run prisma validate
         env:
           DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
           DIRECT_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"

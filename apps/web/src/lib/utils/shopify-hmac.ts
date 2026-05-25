@@ -26,7 +26,7 @@ function timingSafeEqual(a: string, b: string): boolean {
   const bufB = Buffer.from(b)
   let result = 0
   for (let i = 0; i < bufA.length; i++) {
-    result |= bufA[i] ^ bufB[i]
+    result |= bufA[i]! ^ bufB[i]!
   }
   return result === 0
 }

@@ -59,7 +59,7 @@ jobs:
           if [ "$(date +%u)" = "7" ] && [ -z "${{ github.event.inputs.mode }}" ]; then
             ARGS="--full"
           fi
-          pnpm --filter @rr/catalog-sync start $ARGS
+          pnpm --filter @rr/catalog-sync start -- $ARGS
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}

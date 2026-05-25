@@ -39,9 +39,9 @@ async function pollTracking() {
       const updates = await adapter.getTrackingStatus(so.supplierPoNumber)
 
       for (const update of updates) {
-        // Upsert shipment record
+        // Upsert shipment record using composite unique key
         const shipment = await prisma.shipment.upsert({
-          where: { id: `${so.orderId}-${update.trackingNumber}` },
+          where: { orderId_trackingNumber: { orderId: so.orderId, trackingNumber: update.trackingNumber } },
           update: {
             status: mapTrackingStatus(update.status),
             estimatedDelivery: update.estimatedDelivery,
@@ -49,7 +49,6 @@ async function pollTracking() {
             lastTrackingData: update as Record<string, unknown>,
           },
           create: {
-            id: `${so.orderId}-${update.trackingNumber}`,
             orderId: so.orderId,
             carrier: update.carrier,
             trackingNumber: update.trackingNumber,
@@ -66,12 +65,8 @@ async function pollTracking() {
           await syncFulfillmentToShopify(so.order.shopifyOrderId, shipment.id, update)
         }
 
-        // Update order delivered_at when all shipments are delivered
+        // Update order delivered_at when shipment is delivered
         if (update.status === 'delivered' && update.deliveredAt) {
-          await prisma.shipment.update({
-            where: { id: shipment.id },
-            data: { deliveredAt: update.deliveredAt },
-          })
           await prisma.order.update({
             where: { id: so.orderId },
             data: { deliveredAt: update.deliveredAt, status: 'DELIVERED' },
