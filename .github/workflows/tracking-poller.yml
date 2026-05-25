@@ -1,0 +1,45 @@
+name: Tracking Poller
+
+on:
+  schedule:
+    # Poll tracking every 4 hours
+    - cron: "0 */4 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  poll-tracking:
+    name: Poll Supplier Tracking
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+      - name: Poll tracking
+        run: pnpm --filter @rr/tracking-poller start
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          KEYSTONE_API_KEY: ${{ secrets.KEYSTONE_API_KEY }}
+          KEYSTONE_ACCOUNT_NUMBER: ${{ secrets.KEYSTONE_ACCOUNT_NUMBER }}
+          TURN14_API_KEY: ${{ secrets.TURN14_API_KEY }}
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ADMIN_API_KEY: ${{ secrets.SHOPIFY_ADMIN_API_KEY }}
+          SHOPIFY_ADMIN_API_SECRET: ${{ secrets.SHOPIFY_ADMIN_API_SECRET }}

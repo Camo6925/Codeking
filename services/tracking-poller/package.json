@@ -1,0 +1,17 @@
+{
+  "name": "@rr/tracking-poller",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rr/db": "workspace:*",
+    "@rr/supplier-adapters": "workspace:*",
+    "tsx": "^4.9.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
