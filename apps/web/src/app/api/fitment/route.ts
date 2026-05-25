@@ -6,6 +6,7 @@ export async function GET(request: Request) {
   const trimId = searchParams.get('trimId')
   const vehicleId = searchParams.get('vehicleId') // alias for trimId
   const categorySlug = searchParams.get('categorySlug')
+  const productId = searchParams.get('productId') // optional: check a specific product
   const page = parseInt(searchParams.get('page') ?? '1', 10)
   const limit = Math.min(parseInt(searchParams.get('limit') ?? '24', 10), 100)
 
@@ -21,6 +22,7 @@ export async function GET(request: Request) {
       product: {
         isActive: true,
         ...(categorySlug ? { category: { slug: categorySlug } } : {}),
+        ...(productId ? { id: productId } : {}),
       },
     },
     select: { productId: true },

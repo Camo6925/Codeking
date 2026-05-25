@@ -1,33 +1,44 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useVehicle } from '../vehicle/VehicleContext'
-import { cn } from '@/lib/utils/cn'
 
 interface FitmentBadgeProps {
-  fits: boolean
-  notes?: string | null
+  productId: string
+  trimId?: number | null
   className?: string
 }
 
-export function FitmentBadge({ fits, notes, className }: FitmentBadgeProps) {
+export function FitmentBadge({ productId, trimId: explicitTrimId, className }: FitmentBadgeProps) {
   const { selectedVehicle } = useVehicle()
+  const trimId = explicitTrimId ?? selectedVehicle?.trimId
+  const [fits, setFits] = useState<boolean | null>(null)
 
-  if (!selectedVehicle) return null
+  useEffect(() => {
+    if (!trimId) { setFits(null); return }
+    const params = new URLSearchParams({ trimId: String(trimId), productId, limit: '1' })
+    fetch(`/api/fitment?${params}`)
+      .then((r) => r.json())
+      .then((d) => setFits((d.products ?? []).some((p: { id: string }) => p.id === productId)))
+      .catch(() => setFits(null))
+  }, [productId, trimId])
+
+  if (!trimId || fits === null) return null
+
+  const vehicleLabel = selectedVehicle
+    ? `${selectedVehicle.year} ${selectedVehicle.make}`
+    : 'your vehicle'
 
   return (
-    <div
-      className={cn(
-        'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium',
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
         fits
-          ? 'bg-green-100 text-green-800'
-          : 'bg-red-100 text-red-800',
-        className
-      )}
-      title={notes ?? undefined}
+          ? 'bg-green-900/60 text-green-300'
+          : 'bg-red-900/60 text-red-300'
+      } ${className ?? ''}`}
     >
-      <span className={cn('h-1.5 w-1.5 rounded-full', fits ? 'bg-green-500' : 'bg-red-500')} />
-      {fits ? `Fits your ${selectedVehicle.year} ${selectedVehicle.make}` : 'Does not fit your vehicle'}
-      {notes && <span className="ml-1 opacity-75">· {notes}</span>}
-    </div>
+      <span className={`h-1.5 w-1.5 rounded-full ${fits ? 'bg-green-400' : 'bg-red-400'}`} />
+      {fits ? `Fits ${vehicleLabel}` : `Doesn't fit ${vehicleLabel}`}
+    </span>
   )
 }

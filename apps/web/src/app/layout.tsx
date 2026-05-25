@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { VehicleProvider } from '@/components/vehicle/VehicleContext'
+import { CartProvider } from '@/components/cart/CartContext'
+import { CartDrawer } from '@/components/cart/CartDrawer'
+import { Navbar } from '@/components/layout/Navbar'
+import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
   title: {
@@ -25,7 +29,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <VehicleProvider>
-          {children}
+          <CartProvider>
+            <Navbar />
+            <CartDrawer />
+            {children}
+            <Footer />
+          </CartProvider>
         </VehicleProvider>
       </body>
     </html>

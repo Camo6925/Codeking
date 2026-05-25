@@ -6,9 +6,10 @@ import { useVehicle, type SelectedVehicle } from './VehicleContext'
 interface VehicleSelectorProps {
   onSelect?: (vehicle: SelectedVehicle) => void
   className?: string
+  compact?: boolean
 }
 
-export function VehicleSelector({ onSelect, className }: VehicleSelectorProps) {
+export function VehicleSelector({ onSelect, className, compact = false }: VehicleSelectorProps) {
   const { setSelectedVehicle } = useVehicle()
 
   const [years, setYears] = useState<number[]>([])
@@ -116,7 +117,7 @@ export function VehicleSelector({ onSelect, className }: VehicleSelectorProps) {
       <select
         value={selectedYear}
         onChange={(e) => handleYearChange(e.target.value)}
-        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ruckus-red"
+        className="w-full rounded-md border border-ruckus-gray-mid bg-ruckus-gray-dark px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ruckus-red"
         disabled={loading}
         aria-label="Select year"
       >
@@ -129,7 +130,7 @@ export function VehicleSelector({ onSelect, className }: VehicleSelectorProps) {
       <select
         value={selectedMake}
         onChange={(e) => handleMakeChange(e.target.value)}
-        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ruckus-red disabled:opacity-50"
+        className="w-full rounded-md border border-ruckus-gray-mid bg-ruckus-gray-dark px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ruckus-red disabled:opacity-50"
         disabled={!selectedYear || loading}
         aria-label="Select make"
       >
@@ -142,7 +143,7 @@ export function VehicleSelector({ onSelect, className }: VehicleSelectorProps) {
       <select
         value={selectedModel}
         onChange={(e) => handleModelChange(e.target.value)}
-        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ruckus-red disabled:opacity-50"
+        className="w-full rounded-md border border-ruckus-gray-mid bg-ruckus-gray-dark px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ruckus-red disabled:opacity-50"
         disabled={!selectedMake || loading}
         aria-label="Select model"
       >
@@ -155,7 +156,7 @@ export function VehicleSelector({ onSelect, className }: VehicleSelectorProps) {
       <select
         value={selectedTrim}
         onChange={(e) => handleTrimChange(e.target.value)}
-        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ruckus-red disabled:opacity-50"
+        className="w-full rounded-md border border-ruckus-gray-mid bg-ruckus-gray-dark px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ruckus-red disabled:opacity-50"
         disabled={!selectedModel || loading}
         aria-label="Select trim"
       >
@@ -170,7 +171,7 @@ export function VehicleSelector({ onSelect, className }: VehicleSelectorProps) {
         disabled={!isComplete || loading}
         className="w-full rounded-md bg-ruckus-red px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-ruckus-red-dark disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {loading ? 'Loading...' : 'Find Parts for My Vehicle'}
+        {loading ? 'Loading...' : compact ? 'Apply' : 'Find Parts for My Vehicle'}
       </button>
     </div>
   )
