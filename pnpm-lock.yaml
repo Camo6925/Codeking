@@ -149,6 +149,9 @@ importers:
       '@rr/db':
         specifier: workspace:*
         version: link:../db
+      '@rr/supplier-adapters':
+        specifier: workspace:*
+        version: link:../supplier-adapters
     devDependencies:
       typescript:
         specifier: ^5.4.5

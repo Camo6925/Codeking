@@ -1,2 +1,6 @@
 export { resolveTrimId, getProductIdsByTrim, checkFitment } from './matcher'
 export { normalizeMake, normalizeFinish, normalizePartNumber, normalizeBoltPattern, slugify } from './normalizer'
+export { parseAcesFile } from './aces-parser'
+export { parsePiesFile } from './pies-parser'
+export type { AcesApplication } from './aces-parser'
+export type { PiesItem } from './pies-parser'

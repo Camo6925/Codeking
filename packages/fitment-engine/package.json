@@ -9,7 +9,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@rr/db": "workspace:*"
+    "@rr/db": "workspace:*",
+    "@rr/supplier-adapters": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.4.5"
