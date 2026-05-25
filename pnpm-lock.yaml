@@ -30,6 +30,34 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
+  apps/admin:
+    dependencies:
+      '@rr/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      next:
+        specifier: ^14.2.3
+        version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      '@types/react':
+        specifier: ^18.3.1
+        version: 18.3.29
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.29)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
   apps/web:
     dependencies:
       '@rr/db':
@@ -41,6 +69,9 @@ importers:
       '@rr/order-router':
         specifier: workspace:*
         version: link:../../services/order-router
+      '@rr/supplier-adapters':
+        specifier: workspace:*
+        version: link:../../packages/supplier-adapters
       '@supabase/ssr':
         specifier: ^0.3.0
         version: 0.3.0(@supabase/supabase-js@2.106.1)

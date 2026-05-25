@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@rr/db'
+import { prisma, type Prisma } from '@rr/db'
 
 function isAuthorized(request: Request): boolean {
   const secret = process.env.ADMIN_SECRET
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const status = searchParams.get('status') ?? undefined
   const skip = (page - 1) * limit
 
-  const where = status ? { status: status as Parameters<typeof prisma.order.findMany>[0]['where']['status'] } : {}
+  const where: Prisma.OrderWhereInput = status ? { status: status as Prisma.EnumOrderStatusFilter } : {}
 
   const [orders, total] = await Promise.all([
     prisma.order.findMany({

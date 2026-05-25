@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
   try {
     // routeOrder is idempotent — safe to call multiple times for same order
-    await routeOrder(payload as Parameters<typeof routeOrder>[0])
+    await routeOrder(payload as unknown as Parameters<typeof routeOrder>[0])
     return NextResponse.json({ ok: true })
   } catch (err) {
     // Log but return 200 to prevent Shopify from retrying healthy failures.

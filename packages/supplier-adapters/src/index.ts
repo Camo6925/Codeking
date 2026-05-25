@@ -15,4 +15,4 @@ export function getAdapter(adapterKey: string): SupplierAdapter {
   return adapter
 }
 
-export type { SupplierAdapter, CatalogItem, SupplierOrderPayload } from './types'
+export type { SupplierAdapter, CatalogItem, SupplierOrderPayload, ShippingAddress } from './types'

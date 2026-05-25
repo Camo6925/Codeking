@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@rr/db'
 
-// Returns all available model years, sorted descending.
-// Cached for 24h — vehicle years change once a year.
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const years = await prisma.vehicleYear.findMany({
     orderBy: { year: 'desc' },

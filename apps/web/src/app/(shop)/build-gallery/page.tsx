@@ -23,7 +23,7 @@ export default async function BuildGalleryPage() {
       imageUrls: true,
       caption: true,
     },
-  })
+  }).catch(() => [])
 
   return (
     <main className="min-h-screen bg-ruckus-black text-white">

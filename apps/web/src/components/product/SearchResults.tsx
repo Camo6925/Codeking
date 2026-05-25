@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { ProductCard } from './ProductCard'
 import { useVehicle } from '@/components/vehicle/VehicleContext'
 
@@ -41,7 +41,7 @@ export function SearchResults({ initialQuery }: { initialQuery: string }) {
   // Run search for initial query
   useEffect(() => {
     if (initialQuery) doSearch(initialQuery)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) // intentionally run only on mount — initialQuery is the server-rendered value
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

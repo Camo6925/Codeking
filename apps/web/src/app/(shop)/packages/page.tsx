@@ -19,7 +19,7 @@ export default async function PackagesPage() {
         include: { product: { include: { images: { where: { isPrimary: true }, take: 1 } } } },
       },
     },
-  })
+  }).catch(() => [])
 
   function formatCents(cents: number) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100)

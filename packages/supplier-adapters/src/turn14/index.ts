@@ -34,7 +34,7 @@ export const turn14Adapter: SupplierAdapter = {
   async *fetchFullCatalog(): AsyncGenerator<CatalogItem> {
     let cursor: string | null = null
     do {
-      const url = cursor
+      const url: string = cursor
         ? `${API_BASE}/products?cursor=${cursor}&limit=500`
         : `${API_BASE}/products?limit=500`
       const res = await fetch(url, { headers: turn14Headers() })
@@ -131,19 +131,24 @@ export const turn14Adapter: SupplierAdapter = {
 }
 
 function mapTurn14Catalog(raw: Record<string, unknown>[]): CatalogItem[] {
-  return raw.map((p) => ({
-    partNumber: String(p.part_number ?? ''),
-    supplierPartNum: String(p.sku ?? p.part_number ?? ''),
-    name: String(p.name ?? ''),
-    brandName: String(p.brand?.name ?? ''),
-    categorySlug: String(p.category?.slug ?? 'wheels'),
-    upc: p.upc ? String(p.upc) : undefined,
-    costCents: Math.round(Number(p.pricing?.cost ?? 0) * 100),
-    msrpCents: p.pricing?.retail ? Math.round(Number(p.pricing.retail) * 100) : undefined,
-    mapPriceCents: p.pricing?.map ? Math.round(Number(p.pricing.map) * 100) : undefined,
-    imageUrls: Array.isArray(p.images) ? (p.images as string[]) : [],
-    attributes: (p.dimensions as Record<string, string>) ?? {},
-  }))
+  return raw.map((p) => {
+    const brand = p.brand as Record<string, unknown> | undefined
+    const category = p.category as Record<string, unknown> | undefined
+    const pricing = p.pricing as Record<string, unknown> | undefined
+    return {
+      partNumber: String(p.part_number ?? ''),
+      supplierPartNum: String(p.sku ?? p.part_number ?? ''),
+      name: String(p.name ?? ''),
+      brandName: String(brand?.name ?? ''),
+      categorySlug: String(category?.slug ?? 'wheels'),
+      upc: p.upc ? String(p.upc) : undefined,
+      costCents: Math.round(Number(pricing?.cost ?? 0) * 100),
+      msrpCents: pricing?.retail ? Math.round(Number(pricing.retail) * 100) : undefined,
+      mapPriceCents: pricing?.map ? Math.round(Number(pricing.map) * 100) : undefined,
+      imageUrls: Array.isArray(p.images) ? (p.images as string[]) : [],
+      attributes: (p.dimensions as Record<string, string>) ?? {},
+    }
+  })
 }
 
 function mapTurn14Status(status: string): TrackingUpdate['status'] {

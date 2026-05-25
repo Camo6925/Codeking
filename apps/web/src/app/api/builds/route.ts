@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@rr/db'
+import { prisma, Prisma } from '@rr/db'
 
 const DEFAULT_LIMIT = 12
 
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       instagramHandle: instagramHandle ?? null,
       imageUrls,
       caption: caption ?? null,
-      featuredProducts: featuredProducts ?? null,
+      featuredProducts: featuredProducts !== undefined ? featuredProducts as Prisma.InputJsonValue : Prisma.JsonNull,
       trimId: trimId ?? null,
       status: 'PENDING',
     },
