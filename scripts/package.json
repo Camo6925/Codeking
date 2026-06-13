@@ -9,6 +9,7 @@
     "@rr/db": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^20.12.12",
     "tsx": "^4.9.3",
     "typescript": "^5.4.5"
   }

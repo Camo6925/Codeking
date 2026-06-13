@@ -1,4 +1,4 @@
-import { prisma } from '@rr/db'
+import { prisma, type Prisma } from '@rr/db'
 import { getAdapter } from '@rr/supplier-adapters'
 
 const SHOPIFY_ADMIN_BASE = `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2024-01`
@@ -46,7 +46,7 @@ async function pollTracking() {
             status: mapTrackingStatus(update.status),
             estimatedDelivery: update.estimatedDelivery,
             deliveredAt: update.deliveredAt,
-            lastTrackingData: update as Record<string, unknown>,
+            lastTrackingData: update as unknown as Prisma.InputJsonValue,
           },
           create: {
             orderId: so.orderId,
@@ -56,7 +56,7 @@ async function pollTracking() {
             status: mapTrackingStatus(update.status),
             estimatedDelivery: update.estimatedDelivery,
             deliveredAt: update.deliveredAt,
-            lastTrackingData: update as Record<string, unknown>,
+            lastTrackingData: update as unknown as Prisma.InputJsonValue,
           },
         })
 
@@ -109,9 +109,10 @@ async function syncFulfillmentToShopify(
       }),
     })
 
+    const fulfillment = (data as Record<string, unknown>).fulfillment as Record<string, unknown>
     await prisma.shipment.update({
       where: { id: shipmentId },
-      data: { shopifyFulfillmentId: String(data.fulfillment.id) },
+      data: { shopifyFulfillmentId: String(fulfillment.id) },
     })
   } catch (err) {
     console.error('Failed to sync fulfillment to Shopify:', err)

@@ -27,8 +27,8 @@ export const turn14Adapter: SupplierAdapter = {
       { headers: turn14Headers() }
     )
     if (!res.ok) throw new Error(`Turn 14 catalog delta failed: ${res.status}`)
-    const data = await res.json()
-    return mapTurn14Catalog(data.data ?? [])
+    const data = await res.json() as Record<string, unknown>
+    return mapTurn14Catalog((data.data as Record<string, unknown>[] | undefined) ?? [])
   },
 
   async *fetchFullCatalog(): AsyncGenerator<CatalogItem> {
@@ -39,10 +39,11 @@ export const turn14Adapter: SupplierAdapter = {
         : `${API_BASE}/products?limit=500`
       const res = await fetch(url, { headers: turn14Headers() })
       if (!res.ok) throw new Error(`Turn 14 full catalog failed: ${res.status}`)
-      const data = await res.json()
-      const items = mapTurn14Catalog(data.data ?? [])
+      const data = await res.json() as Record<string, unknown>
+      const items = mapTurn14Catalog((data.data as Record<string, unknown>[] | undefined) ?? [])
       for (const item of items) yield item
-      cursor = data.meta?.nextCursor ?? null
+      const meta = data.meta as Record<string, unknown> | undefined
+      cursor = meta?.nextCursor ? String(meta.nextCursor) : null
     } while (cursor)
   },
 
@@ -75,10 +76,11 @@ export const turn14Adapter: SupplierAdapter = {
       throw new Error(`Turn 14 order submission failed: ${res.status} — ${text}`)
     }
 
-    const data = await res.json()
+    const data = await res.json() as Record<string, unknown>
+    const dataObj = data.data as Record<string, unknown>
     return {
-      supplierPoNumber: data.data.order_number,
-      status: data.data.status === 'accepted' ? 'confirmed' : 'pending',
+      supplierPoNumber: String(dataObj.order_number ?? ''),
+      status: dataObj.status === 'accepted' ? 'confirmed' : 'pending',
     }
   },
 
@@ -95,8 +97,8 @@ export const turn14Adapter: SupplierAdapter = {
       headers: turn14Headers(),
     })
     if (!res.ok) return []
-    const data = await res.json()
-    return (data.data ?? []).map(
+    const data = await res.json() as Record<string, unknown>
+    return ((data.data as Record<string, unknown>[] | undefined) ?? []).map(
       (t: Record<string, unknown>): TrackingUpdate => ({
         carrier: String(t.carrier ?? ''),
         trackingNumber: String(t.tracking_number ?? ''),
@@ -119,10 +121,11 @@ export const turn14Adapter: SupplierAdapter = {
           headers: turn14Headers(),
         })
         if (!res.ok) return
-        const data = await res.json()
+        const data = await res.json() as Record<string, unknown>
+        const inv = data.data as Record<string, unknown> | undefined
         result[sku] = {
-          qtyAvailable: data.data?.qty_available ?? 0,
-          warehouseCode: data.data?.warehouse,
+          qtyAvailable: Number(inv?.qty_available ?? 0),
+          warehouseCode: inv?.warehouse ? String(inv.warehouse) : undefined,
         }
       })
     )

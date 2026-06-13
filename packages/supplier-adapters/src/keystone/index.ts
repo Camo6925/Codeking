@@ -30,8 +30,8 @@ export const keystoneAdapter: SupplierAdapter = {
     const url = `${API_BASE}/products?updated_since=${since.toISOString()}`
     const res = await fetch(url, { headers: keystoneHeaders() })
     if (!res.ok) throw new Error(`Keystone catalog delta failed: ${res.status} ${res.statusText}`)
-    const data = await res.json()
-    return mapKeystoneCatalog(data.products ?? [])
+    const data = await res.json() as Record<string, unknown>
+    return mapKeystoneCatalog((data.products as Record<string, unknown>[] | undefined) ?? [])
   },
 
   async *fetchFullCatalog(): AsyncGenerator<CatalogItem> {
@@ -43,8 +43,8 @@ export const keystoneAdapter: SupplierAdapter = {
         headers: keystoneHeaders(),
       })
       if (!res.ok) throw new Error(`Keystone full catalog page ${page} failed`)
-      const data = await res.json()
-      const items: CatalogItem[] = mapKeystoneCatalog(data.products ?? [])
+      const data = await res.json() as Record<string, unknown>
+      const items: CatalogItem[] = mapKeystoneCatalog((data.products as Record<string, unknown>[] | undefined) ?? [])
       for (const item of items) yield item
       if (!data.hasNextPage) break
       page++
@@ -81,10 +81,10 @@ export const keystoneAdapter: SupplierAdapter = {
       throw new Error(`Keystone order submission failed: ${res.status} — ${text}`)
     }
 
-    const data = await res.json()
+    const data = await res.json() as Record<string, unknown>
     return {
-      supplierPoNumber: data.orderNumber,
-      estimatedShipDate: data.estimatedShipDate ? new Date(data.estimatedShipDate) : undefined,
+      supplierPoNumber: String(data.orderNumber ?? ''),
+      estimatedShipDate: data.estimatedShipDate ? new Date(String(data.estimatedShipDate)) : undefined,
       status: 'confirmed',
     }
   },
@@ -102,8 +102,8 @@ export const keystoneAdapter: SupplierAdapter = {
       headers: keystoneHeaders(),
     })
     if (!res.ok) return []
-    const data = await res.json()
-    return (data.shipments ?? []).map(
+    const data = await res.json() as Record<string, unknown>
+    return ((data.shipments as Record<string, unknown>[] | undefined) ?? []).map(
       (s: Record<string, unknown>): TrackingUpdate => ({
         carrier: String(s.carrier ?? ''),
         trackingNumber: String(s.trackingNumber ?? ''),
@@ -120,12 +120,13 @@ export const keystoneAdapter: SupplierAdapter = {
       body: JSON.stringify({ partNumbers }),
     })
     if (!res.ok) return {}
-    const data = await res.json()
+    const data = await res.json() as Record<string, unknown>
     const result: AvailabilityMap = {}
-    for (const item of data.items ?? []) {
-      result[item.partNumber] = {
-        qtyAvailable: item.quantityAvailable ?? 0,
-        warehouseCode: item.warehouseCode,
+    for (const item of (data.items as Record<string, unknown>[] | undefined) ?? []) {
+      const partNumber = String(item.partNumber ?? '')
+      result[partNumber] = {
+        qtyAvailable: Number(item.quantityAvailable ?? 0),
+        warehouseCode: item.warehouseCode ? String(item.warehouseCode) : undefined,
       }
     }
     return result
