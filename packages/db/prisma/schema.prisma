@@ -1,0 +1,552 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VEHICLE CATALOG (ACES-aligned)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model VehicleYear {
+  id    Int          @id @default(autoincrement())
+  year  Int          @unique
+  makes VehicleMake[]
+
+  @@index([year])
+  @@map("vehicle_years")
+}
+
+model VehicleMake {
+  id     Int            @id @default(autoincrement())
+  name   String
+  slug   String         @unique
+  yearId Int
+  year   VehicleYear    @relation(fields: [yearId], references: [id])
+  models VehicleModel[]
+
+  @@index([yearId])
+  @@index([slug])
+  @@map("vehicle_makes")
+}
+
+model VehicleModel {
+  id     Int           @id @default(autoincrement())
+  name   String
+  slug   String
+  makeId Int
+  make   VehicleMake   @relation(fields: [makeId], references: [id])
+  trims  VehicleTrim[]
+
+  @@unique([makeId, slug])
+  @@index([makeId])
+  @@map("vehicle_models")
+}
+
+model VehicleTrim {
+  id                  Int      @id @default(autoincrement())
+  name                String
+  modelId             Int
+  model               VehicleModel @relation(fields: [modelId], references: [id])
+  // Physical fitment attributes
+  driveType           String?  // "4WD", "RWD", "FWD", "AWD"
+  engineDesc          String?  // "3.5L V6"
+  bodyStyle           String?  // "4-Door Crew Cab"
+  boltPattern         String?  // "6x139.7"
+  hubBore             Decimal? @db.Decimal(6, 2)
+  frontOffsetRange    String?  // "+15 to +30"
+  rearOffsetRange     String?  // "+15 to +25"
+  tpmsRequired        Boolean  @default(false)
+  // ACES cross-reference — unique so it can be used as an upsert key
+  acesBaseVehicleId   Int?     @unique
+
+  fitmentApplications FitmentApplication[]
+  savedVehicles       SavedVehicle[]
+  packageFitments     PackageFitment[]
+  builds              Build[]
+
+  // Composite unique enables reliable upsert by (model, trim name)
+  @@unique([modelId, name])
+  @@index([modelId])
+  @@map("vehicle_trims")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPPLIERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Supplier {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  slug            String   @unique
+  // Key used by supplier-adapters factory to select the right adapter module
+  adapterKey      String
+  isActive        Boolean  @default(true)
+  apiBaseUrl      String?
+  ftpHost         String?
+  // Account number stored as reference; actual credentials live in env vars
+  accountNumber   String?
+  defaultLeadDays Int      @default(3)
+  minOrderAmount  Decimal? @db.Decimal(10, 2)
+  supportsEdi     Boolean  @default(false)
+
+  supplierProducts    SupplierProduct[]
+  supplierOrders      SupplierOrder[]
+  catalogSyncLogs     CatalogSyncLog[]
+  supplierInventories SupplierInventory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("suppliers")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRODUCT CATALOG
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  parentId String?
+  parent   Category? @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@index([slug])
+  @@map("categories")
+}
+
+model Brand {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  logoUrl     String?
+  mapEnforced Boolean   @default(true)
+  products    Product[]
+
+  @@index([slug])
+  @@map("brands")
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  partNumber        String   @unique  // Manufacturer part number — deduplication key
+  upc               String?  @unique
+  name              String
+  slug              String   @unique
+  description       String?  @db.Text
+  categoryId        String
+  category          Category @relation(fields: [categoryId], references: [id])
+  brandId           String
+  brand             Brand    @relation(fields: [brandId], references: [id])
+  // Pricing in cents (USD) — avoids floating-point errors
+  msrp              Int?
+  mapPrice          Int?     // MAP floor — enforced at display and order layers
+  weightLbs         Decimal? @db.Decimal(8, 2)
+  // Shopify sync metadata
+  shopifyProductId  String?  @unique
+  shopifyHandle     String?  @unique
+  shopifySyncedAt   DateTime?
+  isActive          Boolean  @default(true)
+  // PIES attributes as JSON for category-specific fields
+  attributes        Json?
+
+  images              ProductImage[]
+  variants            ProductVariant[]
+  fitmentApplications FitmentApplication[]
+  supplierProducts    SupplierProduct[]
+  packageItems        PackageItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([slug])
+  @@index([shopifyProductId])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+model ProductVariant {
+  id                 String             @id @default(cuid())
+  productId          String
+  product            Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Wheel-specific dimensions (null for non-wheel categories)
+  diameter           String?
+  width              String?
+  finish             String?
+  boltPattern        String?
+  offset             String?
+  // Pricing in cents
+  price              Int
+  compareAtPrice     Int?
+  // Shopify variant sync — null until Shopify product sync runs
+  shopifyVariantId   String?            @unique
+  // Stable pre-Shopify-sync lookup key: "{supplierId}:{supplierPartNum}"
+  supplierVariantKey String?            @unique
+  availabilityStatus AvailabilityStatus @default(UNKNOWN)
+
+  supplierInventory SupplierInventory[]
+  orderItems        OrderItem[]
+
+  @@index([productId])
+  @@index([boltPattern])
+  @@index([diameter, width])
+  @@map("product_variants")
+}
+
+enum AvailabilityStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  DISCONTINUED
+  UNKNOWN
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FITMENT APPLICATIONS (ACES-aligned)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model FitmentApplication {
+  id                String      @id @default(cuid())
+  productId         String
+  product           Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  trimId            Int
+  trim              VehicleTrim @relation(fields: [trimId], references: [id])
+  notes             String?
+  // True for products that fit all vehicles (accessories, universal lighting)
+  isUniversal       Boolean     @default(false)
+  // ACES ApplicationID for source traceability
+  acesApplicationId String?
+  sourceSupplier    String?
+  verifiedAt        DateTime?
+
+  @@unique([productId, trimId])
+  @@index([productId])
+  @@index([trimId])
+  @@map("fitment_applications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPPLIER PRODUCTS & INVENTORY
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SupplierProduct {
+  id              String   @id @default(cuid())
+  supplierId      String
+  supplier        Supplier @relation(fields: [supplierId], references: [id])
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id])
+  supplierPartNum String   // Supplier's own part number (may differ from MPN)
+  supplierSku     String?
+  cost            Int      // Wholesale cost in cents
+  // isPreferred=true → this supplier selected first during order routing
+  isPreferred     Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  lastSyncedAt    DateTime?
+
+  @@unique([supplierId, supplierPartNum])
+  @@index([productId])
+  @@index([supplierId])
+  @@map("supplier_products")
+}
+
+model SupplierInventory {
+  id            String         @id @default(cuid())
+  variantId     String
+  variant       ProductVariant @relation(fields: [variantId], references: [id])
+  supplierId    String
+  supplier      Supplier       @relation(fields: [supplierId], references: [id])
+  qtyOnHand     Int            @default(0)
+  qtyAvailable  Int            @default(0)
+  warehouseCode String?
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([variantId, supplierId])
+  @@index([supplierId])
+  @@map("supplier_inventory")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PACKAGES (multi-product bundles)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Package {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  description      String?  @db.Text
+  imageUrl         String?
+  totalMsrp        Int?     // Sum of component MSRPs in cents
+  packagePrice     Int      // Bundle price in cents
+  isActive         Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  shopifyProductId String?  @unique
+
+  items   PackageItem[]
+  fitment PackageFitment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@map("packages")
+}
+
+model PackageItem {
+  id        String  @id @default(cuid())
+  packageId String
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+  sortOrder Int     @default(0)
+
+  @@index([packageId])
+  @@map("package_items")
+}
+
+model PackageFitment {
+  id        String      @id @default(cuid())
+  packageId String
+  package   Package     @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  trimId    Int
+  trim      VehicleTrim @relation(fields: [trimId], references: [id])
+  notes     String?
+
+  @@unique([packageId, trimId])
+  @@index([packageId])
+  @@map("package_fitments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUILD GALLERY
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Build {
+  id               String       @id @default(cuid())
+  trimId           Int?
+  trim             VehicleTrim? @relation(fields: [trimId], references: [id])
+  vehicleLabel     String       // Denormalized: "2022 Toyota Tacoma TRD Pro"
+  submitterName    String
+  submitterEmail   String
+  instagramHandle  String?
+  imageUrls        String[]     // Stored in Supabase Storage
+  caption          String?      @db.Text
+  featuredProducts Json?        // [{ productId, partNumber, name }]
+  status           BuildStatus  @default(PENDING)
+  approvedAt       DateTime?
+  slug             String?      @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([trimId])
+  @@map("builds")
+}
+
+enum BuildStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ORDERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Order {
+  id                       String      @id @default(cuid())
+  shopifyOrderId           String      @unique
+  shopifyOrderName         String      // "#1001"
+  shopifyOrderNumber       Int
+  customerEmail            String
+  customerName             String
+  subtotalCents            Int
+  shippingCents            Int
+  taxCents                 Int
+  totalCents               Int
+  status                   OrderStatus @default(NEW)
+  shopifyFulfillmentStatus String?
+  shopifyCreatedAt         DateTime
+  paidAt                   DateTime?
+  cancelledAt              DateTime?
+  // Review automation timestamps
+  reviewRequestedAt        DateTime?
+  deliveredAt              DateTime?
+
+  items          OrderItem[]
+  supplierOrders SupplierOrder[]
+  shipments      Shipment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([customerEmail])
+  @@index([shopifyOrderId])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  NEW
+  PROCESSING
+  PARTIALLY_FULFILLED
+  FULFILLED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model OrderItem {
+  id                String          @id @default(cuid())
+  orderId           String
+  order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId         String?
+  variant           ProductVariant? @relation(fields: [variantId], references: [id])
+  // Denormalized for order history integrity — source product may change
+  productName       String
+  partNumber        String
+  variantTitle      String?
+  quantity          Int
+  unitPriceCents    Int
+  totalPriceCents   Int
+  shopifyLineItemId String
+
+  @@index([orderId])
+  @@index([variantId])
+  @@map("order_items")
+}
+
+model SupplierOrder {
+  id               String              @id @default(cuid())
+  orderId          String
+  order            Order               @relation(fields: [orderId], references: [id])
+  supplierId       String
+  supplier         Supplier            @relation(fields: [supplierId], references: [id])
+  supplierPoNumber String?
+  supplierStatus   String?
+  status           SupplierOrderStatus @default(PENDING)
+  errorMessage     String?
+  retryCount       Int                 @default(0)
+  submittedAt      DateTime?
+  confirmedAt      DateTime?
+  shippedAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("supplier_orders")
+}
+
+enum SupplierOrderStatus {
+  PENDING
+  SUBMITTED
+  CONFIRMED
+  SHIPPED
+  FAILED
+  CANCELLED
+}
+
+model Shipment {
+  id                   String         @id @default(cuid())
+  orderId              String
+  order                Order          @relation(fields: [orderId], references: [id])
+  carrier              String
+  trackingNumber       String
+  trackingUrl          String?
+  status               ShipmentStatus @default(IN_TRANSIT)
+  estimatedDelivery    DateTime?
+  deliveredAt          DateTime?
+  shopifyFulfillmentId String?
+  lastTrackingData     Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Composite unique enables safe upsert in tracking poller
+  @@unique([orderId, trackingNumber])
+  @@index([orderId])
+  @@index([trackingNumber])
+  @@map("shipments")
+}
+
+enum ShipmentStatus {
+  LABEL_CREATED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  EXCEPTION
+  RETURNED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CUSTOMER GARAGE (saved vehicles)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SavedVehicle {
+  id         String      @id @default(cuid())
+  customerId String      // Shopify customer GID or session ID for guests
+  trimId     Int
+  trim       VehicleTrim @relation(fields: [trimId], references: [id])
+  label      String      // Customer-provided nickname: "My Taco"
+  isPrimary  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+
+  @@index([customerId])
+  @@index([trimId])
+  @@map("saved_vehicles")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CATALOG SYNC AUDIT LOG
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CatalogSyncLog {
+  id              String     @id @default(cuid())
+  supplierId      String
+  supplier        Supplier   @relation(fields: [supplierId], references: [id])
+  startedAt       DateTime   @default(now())
+  completedAt     DateTime?
+  status          SyncStatus @default(RUNNING)
+  productsFound   Int        @default(0)
+  productsCreated Int        @default(0)
+  productsUpdated Int        @default(0)
+  productsSkipped Int        @default(0)
+  errorCount      Int        @default(0)
+  errorSample     Json?      // First N error messages for debugging
+
+  @@index([supplierId])
+  @@index([status])
+  @@map("catalog_sync_logs")
+}
+
+enum SyncStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  PARTIAL
+}

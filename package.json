@@ -1,0 +1,32 @@
+{
+  "name": "ruckus-renditions",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "test": "turbo test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "db:generate": "pnpm --filter @rr/db prisma generate",
+    "db:migrate": "pnpm --filter @rr/db prisma migrate deploy",
+    "db:migrate:dev": "pnpm --filter @rr/db prisma migrate dev",
+    "db:studio": "pnpm --filter @rr/db prisma studio",
+    "db:seed": "pnpm --filter @rr/db tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint-config-prettier": "^9.1.0"
+  }
+}

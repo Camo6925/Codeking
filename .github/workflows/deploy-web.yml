@@ -1,0 +1,50 @@
+name: Deploy Web (Vercel)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Vercel GitHub integration handles preview deployments on PRs automatically.
+# This workflow handles production deployments on main via the Vercel CLI.
+
+jobs:
+  deploy:
+    name: Deploy to Vercel Production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @rr/db exec prisma generate
+
+      - name: Type check
+        run: pnpm --filter @rr/web exec tsc --noEmit
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_SHOPIFY_DOMAIN: ${{ secrets.NEXT_PUBLIC_SHOPIFY_DOMAIN }}
+          SHOPIFY_STOREFRONT_ACCESS_TOKEN: ${{ secrets.SHOPIFY_STOREFRONT_ACCESS_TOKEN }}
+
+      - name: Deploy to Vercel
+        run: |
+          pnpm dlx vercel --token=${{ secrets.VERCEL_TOKEN }} \
+            --prod \
+            --yes \
+            --cwd apps/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

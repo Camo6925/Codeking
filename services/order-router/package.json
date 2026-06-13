@@ -1,0 +1,19 @@
+{
+  "name": "@rr/order-router",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/router.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rr/db": "workspace:*",
+    "@rr/supplier-adapters": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "typescript": "^5.4.5"
+  }
+}
