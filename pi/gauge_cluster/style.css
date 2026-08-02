@@ -1,0 +1,40 @@
+/* Theme variables — this is the main knob for "make it look different"
+   later. Colors/backgrounds live here, not in app.js, so re-skinning
+   never means touching the rendering code. */
+:root {
+  --bg-color: #05070a;
+  --face-color: #0d1117;
+  --tick-color: #4a5568;
+  --tick-label-color: #a0aec0;
+  --needle-color: #00d4ff;
+  --redline-color: #ff3b30;
+  --digital-color: #e6f7ff;
+  --stale-color: #55606e;
+  --unit-color: #6b7684;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-color);
+  overflow: hidden;
+}
+
+#cluster {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+canvas {
+  flex: 1 1 50%;
+  width: 50%;
+  height: 100%;
+  display: block;
+}
