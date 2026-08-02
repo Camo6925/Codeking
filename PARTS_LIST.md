@@ -27,7 +27,7 @@
 | Part | Notes | Est. Price |
 |---|---|---|
 | Teensy 4.0 (or 4.1 for extra I/O) | Pre-processes CAN/sensor data before sending to Pi | $23–30 |
-| CAN Transceiver (SN65HVD230 or TJA1050 breakout) | Wired directly to Teensy's native onboard CAN controller — decided against the MCP2515 SPI module (Teensy 4.0/4.1 has CAN built into the chip, so a separate CAN controller module is unnecessary) | $3–8 |
+| CAN Transceiver (SN65HVD230 breakout) | Wired directly to Teensy's native onboard CAN controller — decided against the MCP2515 SPI module (Teensy 4.0/4.1 has CAN built into the chip, so a separate CAN controller module is unnecessary). SN65HVD230 specifically because it's a native 3.3V part matching the Teensy's I/O; avoid 5V transceivers like the TJA1050 here since Teensy GPIO is not 5V-tolerant and a 5V transceiver TX line into a Teensy pin risks damaging it | $3–8 |
 | OBDII Connector/Breakout Cable | Clean tap into S10 data line | $10–20 |
 | Additional analog sensors (oil pressure, coolant temp) — optional | Only needed if not pulling from PCM | $15–40 ea |
 
