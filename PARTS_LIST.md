@@ -27,8 +27,7 @@
 | Part | Notes | Est. Price |
 |---|---|---|
 | Teensy 4.0 (or 4.1 for extra I/O) | Pre-processes CAN/sensor data before sending to Pi | $23–30 |
-| MCP2515 CAN Bus Module (SPI) | Pairs with Teensy for CAN reads | $8–15 |
-| CAN Transceiver (TJA1050 or similar, if not integrated on MCP2515 board) | Confirm if your MCP2515 board already includes this | $3–8 |
+| CAN Transceiver (SN65HVD230 or TJA1050 breakout) | Wired directly to Teensy's native onboard CAN controller — decided against the MCP2515 SPI module (Teensy 4.0/4.1 has CAN built into the chip, so a separate CAN controller module is unnecessary) | $3–8 |
 | OBDII Connector/Breakout Cable | Clean tap into S10 data line | $10–20 |
 | Additional analog sensors (oil pressure, coolant temp) — optional | Only needed if not pulling from PCM | $15–40 ea |
 
@@ -68,11 +67,11 @@
 |---|---|---|
 | Core Compute | $139 | $190 |
 | Displays | $140 | $285 |
-| CAN / Teensy | $59 | $113 |
+| CAN / Teensy | $51 | $98 |
 | Audio (DAC + license) | $58 | $78 |
 | Power / Reliability | $70 | $105 |
 | Wiring / Mounting | $80 | $145 |
-| **Grand Total** | **~$546** | **~$916** |
+| **Grand Total** | **~$538** | **~$901** |
 
 **Realistic mid-range build target: ~$650–750**
 
