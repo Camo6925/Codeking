@@ -26,7 +26,10 @@ const uint32_t OUTPUT_INTERVAL_MS = 50; // 20Hz status line to the Pi
 enum PollState { SEND_RPM_REQUEST, AWAIT_RPM, SEND_SPEED_REQUEST, AWAIT_SPEED };
 PollState pollState = SEND_RPM_REQUEST;
 uint32_t requestSentTime = 0;
-bool responseReceivedFlag = false;
+// Separate per-PID flags, not one shared flag — a late/stale reply for the
+// PID we're NOT currently waiting on must not be mistaken for the one we are.
+bool rpmResponseFlag = false;
+bool speedResponseFlag = false;
 
 int currentRPM = 0;
 int currentMPH = 0;
@@ -37,7 +40,7 @@ uint32_t sequenceNumber = 0;
 uint32_t lastOutputTime = 0;
 
 void sendPidRequest(uint8_t pid) {
-  CAN_message_t msg;
+  CAN_message_t msg = {}; // zero every field first — flags.extended must be false (standard 11-bit ID)
   msg.id = OBD_REQUEST_ID;
   msg.len = 8;
   msg.buf[0] = 0x02; // 2 data bytes follow (mode + PID)
@@ -60,17 +63,17 @@ void handleResponse(const CAN_message_t &msg) {
     // RPM = ((A * 256) + B) / 4, per SAE J1979
     currentRPM = ((msg.buf[3] * 256) + msg.buf[4]) / 4;
     rpmValid = true;
-    responseReceivedFlag = true;
+    rpmResponseFlag = true;
   } else if (pid == PID_SPEED && msg.len >= 4) {
     // Speed PID returns km/h directly in byte A
     currentMPH = (int)(msg.buf[3] * 0.621371f + 0.5f);
     mphValid = true;
-    responseReceivedFlag = true;
+    speedResponseFlag = true;
   }
 }
 
 void pollCAN() {
-  CAN_message_t msg;
+  CAN_message_t msg = {};
   while (can1.read(msg)) {
     handleResponse(msg);
   }
@@ -81,12 +84,12 @@ void pollCAN() {
     case SEND_RPM_REQUEST:
       sendPidRequest(PID_RPM);
       requestSentTime = now;
-      responseReceivedFlag = false;
+      rpmResponseFlag = false;
       pollState = AWAIT_RPM;
       break;
 
     case AWAIT_RPM:
-      if (responseReceivedFlag) {
+      if (rpmResponseFlag) {
         pollState = SEND_SPEED_REQUEST;
       } else if (now - requestSentTime > RESPONSE_TIMEOUT_MS) {
         rpmValid = false; // no reply in time — report as stale, don't hang
@@ -97,12 +100,12 @@ void pollCAN() {
     case SEND_SPEED_REQUEST:
       sendPidRequest(PID_SPEED);
       requestSentTime = now;
-      responseReceivedFlag = false;
+      speedResponseFlag = false;
       pollState = AWAIT_SPEED;
       break;
 
     case AWAIT_SPEED:
-      if (responseReceivedFlag) {
+      if (speedResponseFlag) {
         pollState = SEND_RPM_REQUEST;
       } else if (now - requestSentTime > RESPONSE_TIMEOUT_MS) {
         mphValid = false;

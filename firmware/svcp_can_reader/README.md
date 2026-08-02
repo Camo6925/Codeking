@@ -54,6 +54,19 @@ the rest of SVCP's low-voltage electronics (per `PROJECT_REFERENCE.md`)
 — don't ground it back to the OBDII connector's ground pin directly, to
 keep it on the same ground reference as everything else.
 
+**Do not add a CAN termination resistor.** A CAN bus needs exactly two
+120Ω termination resistors, one at each physical end — and the S10's
+factory CAN bus already has both of them built in (near the PCM and
+near the DLC/gateway). You're tapping into that existing bus, not
+building a new one, so it's already terminated. Many SN65HVD230
+breakout boards ship with an onboard 120Ω termination resistor enabled
+by a solder jumper or pull-up pad (often intended for standalone
+bench testing without a real bus). **Check your specific board and
+make sure that jumper is open/removed** before connecting to the
+vehicle — leaving it in adds a third termination point to the bus,
+which improperly loads the line and can cause corrupted or dropped
+frames on the whole vehicle bus, not just your reads.
+
 ## Software setup
 
 1. Install [Teensyduino](https://www.pjrc.com/teensy/teensyduino.html)
@@ -74,6 +87,24 @@ keep it on the same ground reference as everything else.
    be off — the PCM responds to Mode 01 requests as long as it's
    powered and awake), you should see `rpm_valid`/`mph_valid` flip to
    `1` and real numbers appear.
+
+### If `valid` stays `0` once wired to the truck
+
+- **Termination jumper** — see above; the most common cause of "wired
+  correctly but nothing comes back" with these breakout boards.
+- **CAN-H/CAN-L swapped** — an easy mixup and CAN is differential, so
+  a swap won't damage anything, it just won't communicate. Worth
+  trying if everything else checks out.
+- **Response on a different ID** — this firmware only listens for
+  replies on `0x7E8` (the standard engine-ECU response address). If
+  your specific PCM/swap harness answers on a different ID (e.g.
+  `0x7E9`), you'd need a CAN logic analyzer or a cheap USB-CAN adapter
+  to see what's actually on the bus and adjust `OBD_RESPONSE_ID`
+  accordingly. Unlikely for a stock engine PCM, but possible with some
+  standalone harnesses.
+- **Ignition-on but PCM asleep** — some PCMs need a couple of seconds
+  after key-on before they start answering OBD requests; give it a
+  moment before concluding it's not working.
 
 ## Serial protocol
 
