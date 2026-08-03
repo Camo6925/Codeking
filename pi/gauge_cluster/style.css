@@ -38,3 +38,17 @@ canvas {
   height: 100%;
   display: block;
 }
+
+/* The dash-mounted panels are landscape, but this stacks the two
+   gauges vertically on a narrow/portrait screen (e.g. previewing on a
+   phone) instead of squeezing them into slivers. */
+@media (max-aspect-ratio: 1/1) {
+  #cluster {
+    flex-direction: column;
+  }
+
+  canvas {
+    width: 100%;
+    height: 50%;
+  }
+}
