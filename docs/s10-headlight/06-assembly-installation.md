@@ -1,4 +1,4 @@
-# Deliverable 6 – Assembly & Installation Plan (Rev A)
+# Deliverable 6 – Assembly & Installation Plan (Rev B)
 
 > Prerequisites: open items O-1 (service manual wiring), O-3 (housing envelope), O-4 (decorative
 > parts) and O-5 (battery type) are closed, and `tools/wire_calc.py` has been re-run with measured
@@ -41,14 +41,24 @@
    doesn't load the seal.
 7. Check continuity against the D3 pinout table for every connector before first power.
 
+## 6.3a Headlamp harness (Rev B: one plug at each end)
+
+* Each headlamp harness is a single 12-conductor cable: a DT06-12S plug at the headlamp end and a
+  DT06-12S plug at the PDCC end (left key A, right key B). Wire it pin-for-pin per D3 §3.6.
+* Build both harnesses on a layout board using **measured** routes (O-8). Route along the inner fender
+  and radiator support in loom, through a sealed firewall grommet, to the PDCC.
+* Each headlamp pigtail ends in a DT04-12P (A or B), so the headlamp itself carries no fuses or
+  electronics and unplugs as one unit.
+
 ## 6.4 Fuse distribution installation
 
 * **FM:** mount within 300 mm of the battery positive. Side-post GM battery: surface-mount MRBF or
   sealed MIDI holder on a bracket, fed from a side-post auxiliary stud adapter [VERIFY O-5]. Top-post:
   Blue Sea 5191 on the terminal stud. Fit the insulating cap.
-* **RTMR:** mount on the inner fender or radiator support away from direct heat and splash, cable
-  entry facing **down**, fasteners per Eaton torque spec. Install the cover, cable seals and cavity
-  plugs: IP66 depends on all three.
+* **PDCC (Rev B):** one enclosure under the driver-side dash or on the kick panel, containing the RTMR
+  (16 fuses, K1–K9), the LCM PCB and the diode board. Connectors face down. Mount it so every fuse and
+  relay is reachable by removing one cover. Keep it clear of the parking-brake and pedal linkages.
+* The 8 AWG main feed enters the cab through a sealed grommet. FM stays at the battery.
 * Load relays K1–K8 and fuses per the D3 fuse schedule. Fit a printed fuse/relay map inside the cover.
 * **Ground bus:** a sealed or covered stud terminal next to the RTMR, with one 10 AWG lead to the
   battery negative post. Clean, unpainted mounting. Coat finished terminals with corrosion inhibitor.
@@ -90,7 +100,10 @@
 * Connector order: J1 power last on connection, first on disconnection.
 * **HMI:** temporary mount for commissioning. The final mount in the headlamp-knob location is out of
   scope. The J5 run is twisted CAN plus 18 AWG 5 V/GND.
-* **Factory interface** (follow the O-1 service manual pins; values below are the intent only):
+* **Factory interface (Rev B): follow [doc 09](09-factory-switch-integration.md) §4 measurements first.**
+  The steps below are superseded by doc 09 where they differ. In Rev B the old headlamp switch is
+  unplugged and replaced by a pigtail, and front turn signals are picked up in the cab.
+* Rev A steps, kept for reference:
   1. Remove the DRL fuse (or the procedure the service manual specifies) to disable series-high-beam
      DRL/automatic headlamps. **Confirm** the factory high-beam feed is now 0 V with the stalk in LOW,
      the headlamp switch ON and the engine running.
@@ -111,9 +124,9 @@ Follow [D7](07-validation-checklist.md) in order: bench → stationary vehicle �
 
 | Symptom | Likely cause | Check |
 |---|---|---|
-| One low beam out | F1/F2 blown, K2/K3 failed, connector, or module | HMI shows "FEED FAULT"? Swap K2↔K3 (identical relays). Measure J-HL*-P pin 1 with ignition on. |
+| One low beam out | F1/F2 blown, K2/K3 failed, connector, or module | HMI shows "FEED FAULT"? Swap K2↔K3 (identical relays). Measure headlamp connector pin 1 with ignition on. |
 | Both low beams out, ignition on | K1 K-IGN, F7, F0/IGN tap, or the coil diode network | Measure IGN_SW at RTMR. Use emergency switch S1 to get home. |
-| High beam doesn't come on, low stays | HI_REQ missing (DRL module still active? stalk? K6 not closing?) | Measure the 9005 pigtail with stalk HIGH. Check K6. |
+| High beam doesn't come on, low stays | HI_REQ missing (stalk re-pin, F9 stalk feed) | Measure J-VEH-4 with stalk HIGH; check F9. |
 | High beams on in daytime with stalk in LOW | Factory DRL still active (series high-beam mode) | Repeat the DRL disable step and confirm with a meter. |
 | Low beam turns off on high beam | Diode D3 open or missing | Measure the K2/K3 coils with stalk HIGH. |
 | Turn signal hyperflash | LED load on factory flasher | Fit LED-compatible flasher (O-7). |

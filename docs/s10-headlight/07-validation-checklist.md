@@ -1,4 +1,4 @@
-# Deliverable 7 – Validation & Safety Checklist (Rev A)
+# Deliverable 7 – Validation & Safety Checklist (Rev B)
 
 Record every result (value, date, initials). Any **FAIL** in a ★ item blocks road use.
 
@@ -72,12 +72,26 @@ current probe, thermocouple meter, IR thermometer, stopwatch, water spray bottle
 - [ ] With the LCM unplugged: turn and hazard still fully functional.
 - [ ] Running amber on, no turn: rear turn bulb and dash arrow **dark** (no back-feed).
 
+## 7.7a Required lamps and switch-removal replacement functions ★ (Rev B)
+
+- [ ] Ignition RUN: rear tail, rear markers and license plate on (K7 emulation); front side markers on.
+- [ ] Ignition OFF: all of the above off immediately; the factory park relay does not stay latched.
+- [ ] High-beam indicator in the cluster lights with stalk HIGH and with flash-to-pass.
+- [ ] Instrument-panel illumination at an acceptable level (dimmer emulation resistor). Record the value.
+- [ ] Dome lamps still operate from the doors.
+- [ ] **Amber fail-ON:** with the ignition on, (a) unplug the LCM power (pull F6), (b) halt the MCU,
+      (c) pull F5. In each case both amber parking lamps go to **full** within 1 s.
+- [ ] Amber slider cannot go below the floor; at the floor the lamp still meets J222 minimum (photometric
+      check or comparison against a certified reference lamp).
+- [ ] With the DRL fuse and factory headlamp relay removed, no factory module turns anything on in
+      darkness (cover the ambient sensor with the ignition on).
+
 ## 7.8 Low/high beam function & thermal ★
 
 - [ ] Stalk LOW → lows only; stalk HIGH → **lows + highs**; flash-to-pass works; high-beam indicator works.
 - [ ] Stalk LOW with engine running in daylight → highs **off** (confirms factory DRL disabled).
 - [ ] Emergency switch S1 with K1 removed → lows on; highs via stalk.
-- [ ] Factory knob to HEAD with K1 removed → lows/highs via stalk (fallback path).
+- [ ] With K1 removed: S1 gives lows, markers, rear park and amber; stalk HIGH gives highs (stalk fed via S1).
 - [ ] Remove one low-beam relay → other side stays lit; HMI shows a feed fault for the dark side.
 - [ ] Thermal soak: closed housing, lows + highs + all decorative at 100 %, engine idling, hood
       closed, 30 min (and ideally 60 min in hot ambient). Record NTC and thermocouple readings. Must stay
@@ -115,8 +129,10 @@ current probe, thermocouple meter, IR thermometer, stopwatch, water spray bottle
 |---|---|---|
 | Headlamps | FMVSS 108 requires headlamps to be certified by their manufacturer. Use **SAE/DOT-marked** HELLA modules. A home-built housing around certified modules is a modification. Check your state's equipment rules and inspection requirements. | Open |
 | Low + high together | Allowed. Obey the module maker's aiming and mounting instructions; mounting height is regulated (FMVSS 108 table). | **[MEASURE]** mounting height |
-| Turn signal | Front turn signals must meet SAE J588 photometry and flash 60–120 fpm. Use an SAE-marked amber element if it replaces the factory front turn lamp. | Depends on Q3 |
-| Parking lamps | Required; must be on with headlamps. Amber running dimmed by the user must not go below the required intensity if it serves as the parking lamp → `AMB_MIN_DUTY` floor. | Depends on Q3 |
+| Turn signal | Front turn signals must meet SAE J588 and flash 60–120 fpm. The amber pod replaces the factory lamp (D-3), so it must be SAE marked. | Required |
+| Parking lamps | Required; on with headlamps. Dimmed amber must stay above the J222 minimum → `AMB_MIN_DUTY` floor; hardware fail-ON. | Required |
+| Front side markers | Required (amber, front, each side). Certified marker element fed by K6. | Required |
+| Side reflex reflectors | Front amber side reflectors are required; confirm the new corner lamp or a separate reflector provides them. | Open |
 | White DRL strip / honeycomb | Not certified DRLs. US FMVSS 108 regulates DRLs (intensity, deactivation near turn signals); a non-certified decorative white lamp may violate state law. Consider using the HELLA module's built-in certified DRL function as the legal DRL and treating strip/honeycomb as accent lighting. | Review |
 | Colour | Forward lamps white or amber only. | ✔ by design |
 | State law | Many states restrict additional forward lamps, colour, and lighting while moving. **Check your state vehicle code before road use.** | Open |

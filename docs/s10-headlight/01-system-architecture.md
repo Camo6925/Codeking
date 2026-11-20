@@ -1,214 +1,180 @@
-# Deliverable 1 – System Architecture (Rev A)
+# Deliverable 1 – System Architecture (Rev B)
+
+Rev B incorporates owner decisions D-1 to D-4 (see [README](README.md)):
+the factory headlamp switch is removed, low beams follow the ignition, the amber pods replace the factory
+front park/turn/side-marker lamps, and each headlight is a passive assembly with **one** plug,
+home-run to a single custom distribution box.
 
 ## 1.1 Design principles
 
-1. **Criticality partitioning.** Every function belongs to one of three tiers, and no tier depends on a
-   tier below it.
+1. **Criticality partitioning.** No tier depends on a tier below it.
 
-   | Tier | Functions | Implemented with | Depends on MCU? |
+   | Tier | Functions | Implemented with | On controller failure |
    |---|---|---|---|
-   | **T1 – Essential** | Low beam, high beam, front turn/hazard | Relays, diodes, factory flasher, factory stalk | **No** |
-   | **T2 – Decorative** | Honeycomb, DRL strip, amber running | LCM (PROFET switches + ESP32-S3) | Yes. Fails **OFF** |
-   | **T3 – Interface** | Touchscreen, settings UI, diagnostics display | HMI (Waveshare ESP32-S3 4.3B) | Yes. Failure has no lighting effect |
+   | **T1 – Essential** | Low beam, high beam, front turn/hazard, front side markers, rear park/tail request | Relays, diodes, factory flasher, factory stalk | Unaffected |
+   | **T1-F – Required, dimmable** | Amber front parking lamp (CH3) | LCM PWM, plus a **fail-ON** hardware bypass relay | Goes to **full certified park intensity** |
+   | **T2 – Decorative** | Honeycomb (CH1), white DRL strip (CH2) | LCM (PROFET + ESP32-S3) | **OFF** |
+   | **T3 – Interface** | Touchscreen, settings, diagnostics display | HMI (ESP32-S3 4.3") | No lighting effect |
 
-2. **Hardware owns safety; software owns comfort.** Ignition-off cutoff, watchdog cutoff, the 10 s
-   power-down, short-circuit protection and wire protection are all hardware. Firmware adds brightness,
-   diagnostics and messaging.
-3. **Non-destructive vehicle integration.** Connect to factory circuits with plug-in pigtails at
-   existing connectors wherever possible, so the truck can be returned to stock.
-4. **Serviceability.** Plug-in relays and fuses in one sealed module; sealed DT connectors at every
-   module boundary; each headlamp detaches with two plugs.
+   Amber running moved from T2 to T1-F because it is now the truck's legally required front parking
+   lamp (D-3). A required lamp must not go dark because a controller crashed.
 
-## 1.2 System block diagram
+2. **Hardware owns safety; software owns comfort.** Ignition cutoff, watchdog cutoff, the 10 s
+   power-down, the amber fail-ON, short-circuit protection and wire protection are all hardware.
+3. **Passive headlamps.** No fuses, relays or electronics are mounted on the headlights. Each headlight
+   contains only lamps, an NTC sensor and wiring to one sealed connector.
+4. **Non-destructive vehicle integration.** The vehicle interface is made with mating pigtails at the
+   factory headlamp-switch, column-switch and cluster connectors, so reversing it means re-plugging.
+5. **Serviceability.** Every fuse and relay is plug-in and in one box. A headlamp is removed by
+   unplugging one connector.
 
-```mermaid
-flowchart LR
-  BAT[Battery +] --> FM[Main fuse FM\n30 A PROVISIONAL]
-  FM --> RTMR[Sealed fuse/relay module\nRTMR, under hood]
-  BATN[Battery −] --> GB[System ground bus]
+## 1.2 Physical architecture
 
-  subgraph VEH[Factory vehicle circuits]
-    IGN[Ignition RUN]
-    HSW[Factory headlamp switch\nrelocated, kept as fallback]
-    STALK[Dimmer / flash-to-pass stalk]
-    FLASH[Factory turn/hazard flasher\nLED-compatible]
-  end
-
-  IGN -->|coil only, 1 A tap| RTMR
-  RTMR -->|K-HEADREQ / K-PARKREQ| HSW
-  HSW --> STALK
-  STALK -->|LO_REQ / HI_REQ via 9006/9005 pigtails| RTMR
-
-  RTMR -->|LO_L / HI_L 16 AWG| HLL[Left headlamp]
-  RTMR -->|LO_R / HI_R 16 AWG| HLR[Right headlamp]
-  RTMR -->|VDECO, IGN-switched| LCM
-  RTMR -->|CTRL_BATT always hot, 3 A| LCM
-
-  subgraph LCM[Lighting Control Module, in cab]
-    LATCH[Hardware 10 s power latch]
-    MCU[ESP32-S3 + external watchdog]
-    GATE[Hardware AND gating\nIGN_OK · WDOK]
-    PROF[6 × PROFET channels\nL/R × CH1/CH2/CH3\n+ 2 AUX]
-  end
-
-  LCM -->|CH1/CH2/CH3 left, fused| HLL
-  LCM -->|CH1/CH2/CH3 right, fused| HLR
-  FLASH -->|TURN_L direct power| HLL
-  FLASH -->|TURN_R direct power| HLR
-  FLASH -.->|high-impedance sense| LCM
-  STALK -.->|sense| LCM
-  LCM <-->|CAN 500 kbit/s + protected 5 V| HMI[Touchscreen HMI\n4.3 in ESP32-S3]
 ```
+  ┌──────────── ENGINE BAY ─────────────┐        ┌──────────────── CAB ─────────────────────────┐
+  │                                     │        │                                              │
+  │ BATTERY + ─ FM 30 A (≤300 mm) ══════╪═8 AWG══╪══►┐                                          │
+  │ BATTERY − ══════════════════════════╪═8 AWG══╪══►┤  PDCC  (driver-side under-dash/kick panel)│
+  │                                     │ firewall│   │  ┌─────────────┐ ┌───────────────────┐   │
+  │ LEFT HEADLAMP ◄═══ one 12-way DT ═══╪═════════╪═══╡  │ RTMR fuses  │ │ LCM PCB           │   │
+  │ (passive)        home-run harness   │ grommet │   │  │ & relays    │ │ PROFETs, ESP32-S3 │   │
+  │                                     │         │   │  │ F1–F16      │ │ 10 s latch, WDT   │   │
+  │ RIGHT HEADLAMP ◄══ one 12-way DT ═══╪═════════╪═══╡  │ K1–K9       │ │ fail-ON driver    │   │
+  │ (passive)        home-run harness   │         │   │  └─────────────┘ └───────────────────┘   │
+  │                                     │         │   ├── J-VEH ── pigtails: old switch conn.,   │
+  │ old factory lamp sockets: sealed &  │         │   │            column switch, cluster, IGN   │
+  │ abandoned                           │         │   ├── J-HMI ── touchscreen (old knob location)│
+  └─────────────────────────────────────┘         │   └── J-EMER ─ emergency headlamp switch     │
+                                                  └──────────────────────────────────────────────┘
+```
+
+**Why the PDCC is in the cab (driver side):**
+* The ESP32-S3 module, the LCM electronics and the HMI are not rated for engine-bay temperatures. The
+  cab is the benign location.
+* Everything it connects to is within reach: the old headlamp-switch connector, column/stalk
+  connector, cluster, HMI location and front turn feeds.
+* Only three things cross the firewall: the 8 AWG battery feed and ground pair, and the two headlamp
+  home-run harnesses.
+
+The cost of this location is longer headlamp runs and the main feed through the firewall. Both are
+covered in the sizing (8 AWG main, 14 AWG decorative return), and all checks pass in
+`tools/wire_calc.py`.
 
 ## 1.3 Power flow
 
 ```
-BATTERY (+)
-  └─ FM  main fuse (≤ 300 mm from battery, PROVISIONAL 30 A, 10 AWG)
-       └─ RTMR input bus
-            ├─ F1 5 A ── K2 K-LO-L   ──► Left low-beam projector
-            ├─ F2 5 A ── K3 K-LO-R   ──► Right low-beam projector
-            ├─ F3 5 A ── K4 K-HI-L   ──► Left high-beam projector
-            ├─ F4 5 A ── K5 K-HI-R   ──► Right high-beam projector
-            ├─ F5 10 A ── K8 K-DECO   ──► LCM VDECO (decorative power, IGN-switched)
-            ├─ F6 3 A  ─────────────── ──► LCM CTRL_BATT (always hot → hardware latch)
-            ├─ F7 5 A  ── K1 K-IGN    ──► IGN_SW bus (relay coils + IGN sense)
-            ├─ F8 5 A  ─────────────── ──► Emergency headlamp switch (guarded)
-            ├─ F9 5 A  ── K6 K-HEADREQ ─► factory HEAD circuit (only if "feed" option, see 1.6)
-            ├─ F10 (if used) K7 K-PARKREQ ► factory PARK circuit
-            ├─ F11 AUX (future fans/accessories)
-            └─ F12 spare
-BATTERY (−) ── 10 AWG (P) ── SYSTEM GROUND BUS (stud next to RTMR)
-            ├─ projector returns (one 16 AWG per projector)
-            ├─ LCM power ground (14 AWG) and LCM logic ground (18 AWG), joined only on the LCM
-            └─ relay coil returns
+BATTERY (+) ─ FM 30 A MRBF/MIDI (≤ 300 mm from battery) ─ 8 AWG ─ PDCC power stud (VBUS)
+  ├─ F1  5 A ─ K2 K-LO-L ──────────────► Left headlamp pin 1  (low beam)
+  ├─ F2  5 A ─ K3 K-LO-R ──────────────► Right headlamp pin 1
+  ├─ F3  5 A ─ K4 K-HI-L ──────────────► Left headlamp pin 2  (high beam)
+  ├─ F4  5 A ─ K5 K-HI-R ──────────────► Right headlamp pin 2
+  ├─ F5 10 A ─ K8 K-DECO ──────────────► LCM VDECO (CH1/CH2/CH3/AUX power)
+  ├─ F6  3 A ──────────────────────────► LCM CTRL_BATT (always hot → hardware latch)
+  ├─ F7  5 A ─ K1 K-IGN ───────────────► IGN_SW bus (relay coils, IGN sense)
+  ├─ F8  5 A ──────────────────────────► Emergency switch S1
+  ├─ F9  2 A ◄─ IGN_SW / EMER (diodes) ► Stalk common (STALK_FEED)
+  ├─ K6 K-MARKER ─┬─ F12 2 A ──────────► Left headlamp pin 8  (front side marker)
+  │               └─ F13 2 A ──────────► Right headlamp pin 8
+  ├─ F11 3 A ─ K9 K-AMB-FS (fail-ON) ──► amber park nodes L/R (diode-ORed with PROFET CH3)
+  ├─ F15 1 A ◄─ HI_REQ ────────────────► Cluster high-beam indicator
+  ├─ F10 AUX spare   F14 spare   F16 spare
+BATTERY (−) ─ 8 AWG ─ PDCC ground stud ─┬─ PRJ_RTN_L, PRJ_RTN_R  (16 AWG, headlamp pin 3)
+                                        ├─ DECO_RTN_L, DECO_RTN_R (14 AWG, headlamp pin 9)
+                                        ├─ LCM PGND / LGND (joined once on the LCM)
+                                        └─ relay coil returns
+FACTORY CIRCUITS (signal level only):
+  IGN RUN tap ─ F0 1 A ─ K1 coil
+  K7 dry contact ─ old switch pins (park signal) → factory park relay → rear tail/marker/license
+  Factory LF/RF flasher outputs → PDCC → headlamp pin 7 (amber TURN) + LCM sense
 ```
 
-Factory circuits supply **no** lighting power to the new system. The only things the new system takes
-from the truck are:
+## 1.4 Control logic (hardware, no MCU)
 
-* about 150 mA of K-IGN coil current from an ignition-RUN tap, and
-* the request voltages on the factory low/high headlamp wires, which now only drive relay coils.
+| Coil | Energized by (diode-OR) | Effect |
+|---|---|---|
+| K1 K-IGN | Factory IGN RUN tap | Creates IGN_SW |
+| K2/K3 K-LO-L/R | IGN_SW · HI_REQ · EMER_SW | Low beams on with ignition; stay on during high beam |
+| K4/K5 K-HI-L/R | HI_REQ (stalk HI or flash-to-pass) | High beams |
+| K6 K-MARKER | IGN_SW · EMER_SW | Front side markers |
+| K7 K-PARK-SIG | IGN_SW · EMER_SW | Emulates factory switch PARK → rear tail/marker/license |
+| K8 K-DECO | IGN_SW | Decorative power available |
+| K9 K-AMB-FS | IGN_SW · EMER_SW, coil return through **fail-ON driver** | Amber park at full certified intensity unless the LCM is healthy |
 
-The **front amber turn element** is the one deliberate exception. It is powered by the factory flasher
-output, exactly as the factory front turn bulb was, so turn and hazard signals keep working even if
-every custom component is dead.
-
-## 1.4 Control flow
-
-```mermaid
-flowchart TB
-  subgraph HW[Hardware logic, no MCU]
-    IGNSW[IGN_SW] -->|diode| KLO[K-LO-L / K-LO-R coils]
-    LOREQ[Factory LO wire] -->|diode| KLO
-    HIREQ[Factory HI wire] -->|diode| KLO
-    HIREQ -->|diode| KHI[K-HI-L / K-HI-R coils]
-    EMER[Emergency switch] -->|diode| KLO
-    IGNSW --> KDECO[K-DECO coil]
-    IGNSW --> KHR[K-HEADREQ / K-PARKREQ coils]
-  end
-  subgraph LCMB[LCM]
-    IGNOK[IGN_OK Schmitt] --> AND
-    WDT[TPS3431-Q1 WDO] --> AND
-    PWM1[PWM CH1] --> AND
-    PWM2[PWM CH2] --> AND
-    PWM3[PWM CH3 · turn blanking] --> AND
-    AND[SN74LVC08A-Q1 AND gates] --> SPLIT[split to L and R via separate R_IN]
-    SPLIT --> PL[PROFET left channels]
-    SPLIT --> PR[PROFET right channels]
-  end
-```
-
-* **High beam keeps low beam lit:** the low-beam relay coils are diode-ORed from IGN_SW, LO_REQ
-  **and HI_REQ**. A conventional dimmer stalk de-energizes the LO wire when HI is selected, but the
-  low-beam relays stay energized.
-* **Left/right synchronization:** one PWM signal per channel drives both sides' PROFET inputs, so L
-  and R get the same duty from the same timer edge by construction.
+**Fail-ON driver (K9):** the K9 coil return goes through an N-MOSFET whose gate is pulled **up** from
+IGN_SW. The LCM can switch it off (amber under PWM control) only while `HEALTHY = MCU_OK · WDOK` is
+true. If the LCM is unpowered, crashed, resetting or watchdog-faulted, the MOSFET stays on, K9 closes,
+and the amber parking lamps light at full certified intensity. With the ignition off, the coil has no
+supply and everything is off.
 
 ## 1.5 Ignition behavior
 
-| Event | Hardware response | Firmware response |
+| Event | Hardware | Firmware |
 |---|---|---|
-| Ignition → RUN | K-IGN closes → IGN_SW live → K-LO-L/R, K-DECO, K-HEADREQ, K-PARKREQ energize. Low beams **on within relay pull-in time** (no MCU involved). LCM latch switches on CTRL power. | LCM boots (outputs held off by pull-downs and gating), loads saved settings, waits 1 s blanking, then soft-starts decorative channels over 500 ms. HMI boots and requests status. |
-| Cranking | If the chosen IGN circuit stays hot in CRANK (O-6), nothing changes. PROFETs operate down to 3.1 V. LCM 5 V buck runs to about 4.2 V input. | VBAT < 9.0 V for > 200 ms → decorative suspended (prevents brownout flicker and false faults); resumes with ramp when VBAT > 10.5 V for 500 ms. |
-| Ignition → OFF | IGN_SW drops → all relays open → **projectors off immediately**. IGN_OK low → AND gates force all PROFET inputs low → **decorative off immediately**. K-DECO opens, removing decorative power. The latch's 10 s RC hold keeps CTRL power on. | GPIO interrupt on IGN_OK falling edge → set duties to 0, commit settings to NVS if changed, send `LCM_SHUTDOWN` on CAN, stop logging. Then idle until hardware removes power. |
-| +10 s (nominal, 8–12 s with component tolerance) | Comparator output falls → latch PROFET switches off → LCM and HMI unpowered. | — |
-| Key-off steady state | Drain: latch PROFET sleep (≤ 0.6 µA for BTS7008 class) + leakage. Target **< 100 µA total**. **[MEASURE]** | — |
+| Ignition → RUN | K1 → IGN_SW. Lows, side markers and rear park lamps on **within relay pull-in time**. K9 energizes (amber park full) because the LCM isn't healthy yet. Latch powers the LCM and HMI. | Boot → load settings → 1 s blanking → assert HEALTHY. K9 releases and amber hands over to PWM at the saved level (never below the legal floor) → decorative ramps over 500 ms. |
+| Cranking | Relays per IGN circuit behavior (O-6). PROFETs to 3.1 V. | VBAT < 9.0 V > 200 ms: decorative suspended; amber held at the floor or handed to K9. Resume > 10.5 V. |
+| Ignition → OFF | IGN_SW drops: all relays off, all lamps off **immediately**. IGN_OK gates PROFETs off. The latch's RC hold keeps the LCM and HMI powered. | ISR → duty 0 → save NVS → CAN `LCM_SHUTDOWN` → idle. |
+| +10 s (8–12 s) | Latch releases. LCM and HMI unpowered. | — |
+| Key-off | Target drain < 100 µA for the whole system **[MEASURE]**. | — |
 
-## 1.6 Factory headlamp switch, park/tail lamps and the dimmer stalk
+## 1.6 Factory headlamp switch removed
 
-Facts from research:
+The switch is replaced function by function. See
+[09-factory-switch-integration.md](09-factory-switch-integration.md) for the pinout, dispositions and
+the meter verification procedure. In short:
 
-* The 1998–2004 S-series DRL system puts **both high-beam bulbs in series** through a DRL relay. The
-  factory high-beam feed is therefore live, at roughly half voltage per bulb, during daytime running.
-  This is why the factory DRL (and the related automatic-headlamp function) **must be disabled**
-  before the factory HI wire can serve as a high-beam request. Owners commonly do this by removing the
-  DRL fuse. **Confirm the exact fuse and its effect from the service manual (O-1).**
-* The dimmer stalk only outputs LO/HI when the headlamp circuit feeding it is live (normally the factory
-  headlamp switch in HEAD).
+* **Headlamps:** follow ignition (no switch needed).
+* **High beam:** the factory stalk's dimmer contacts are re-pinned as a dry signal switch fed from
+  IGN_SW.
+* **Rear park/tail:** the K7 dry contact replicates the switch's park signal into the factory park relay.
+  The factory power and fusing for the rear lamps are unchanged.
+* **Panel dimming:** resistor emulation of the switch's dimmer signal (Rev B), with a touchscreen-controlled
+  option later.
+* **High-beam indicator:** fed from HI_REQ (the factory headlamp circuit is no longer used).
+* **Factory DRL / automatic headlamps:** disabled (DRL fuse and headlamp relay removed).
 
-Rev A integration:
+## 1.7 Amber corner: turn override and parking-lamp fail-safe
 
-| Relay | Coil | Contacts | Purpose |
-|---|---|---|---|
-| K6 K-HEADREQ | IGN_SW | **In parallel with** the factory headlamp switch HEAD contact (preferred "parallel" option), or feeding the HEAD output from F9 ("feed" option) | Makes the truck behave as if the knob were in HEAD whenever the ignition is on. The stalk then works, flash-to-pass and the high-beam indicator work, and the factory 9005/9006 wires become clean LO/HI request signals. |
-| K7 K-PARKREQ | IGN_SW | In parallel with the factory PARK contact | Tail, park, marker and license lamps on with the headlamps, as FMVSS 108 requires. Stays on factory power and factory fusing. |
-
-In the "parallel" option the factory switch's own fuses keep protecting the factory wiring, which is the
-best protection coordination. With the ignition off, the relays open and the factory switch works
-exactly as stock. That is the manual fallback.
-
-**Instrument-panel dimming** is internal to the factory switch. Keeping the switch (relocated)
-preserves it. If the switch is removed entirely, panel dimming needs a separate solution (O-2, Q1).
-
-## 1.7 Turn signal override logic
-
-**Hardware path (essential):** the factory flasher output for each side feeds the amber pod's **TURN
-input** directly. Flash rate, hazard operation and failure behavior stay under the factory flasher, and
-nothing custom sits in series.
-
-**Running path (decorative):** PWM CH3 → PROFET → amber pod **PARK input**.
-
-**Override:** the LCM watches each turn wire through a high-impedance divider (≥ 57 kΩ, < 0.3 mA load).
+The amber pod must be an **SAE-certified dual-function park/turn lamp** (separate PARK and TURN
+inputs) with a certified front side marker element (or a separate marker lamp). These are legally
+required lamps now (D-3).
 
 ```
-for side in (L, R):
-    if rising edge on TURN_side:            last_edge[side] = now
-    turn_active[side] = (now - last_edge[side]) < 1.2 s     # > one full flash period at 60 fpm
-    duty_CH3[side]    = 0 if turn_active[side] else user_CH3_duty
+ Factory flasher L ────────────────────────────────────────────► TURN input (full intensity)
+ LCM PROFET CH3-L ──|>|──┐
+                         ├─► AMB_PARK_L node ──────────────────► PARK input
+ K9 (fail-ON) ──F11──|>|─┘     (right side identical, own diodes)
+ K6 ── F12 ────────────────────────────────────────────────────► SIDE MARKER
 ```
 
-This puts the running element on that side to **zero during signaling**, so the turn element flashes
-from dark to full intensity with maximum contrast and the brightness setting never touches the turn
-signal. Hazards make both sides active and blank both.
+* **Turn override:** turn and hazard come straight from the factory flasher on the TURN input, so
+  firmware can't dim, delay or block them. While a side is signaling, the LCM also drops that side's
+  CH3 PWM to 0 (per-side `ALLOW_L/R` gate) for maximum flash contrast. This is an enhancement: like the
+  factory 3157 bulb (park filament steady, turn filament flashing), the certified lamp is legal with
+  park on during turn.
+* **Brightness floor:** CH3 adjustment runs from `AMB_MIN_DUTY` (set from the photometric check so the
+  lamp stays above the SAE J222 minimum) to 100 %. The HMI cannot go below the floor.
+* **Fail-ON:** if the LCM fails, K9 feeds the PARK input at full voltage, which is the lamp's certified
+  park intensity.
 
-Because CH3 is one logical channel, the per-side blanking is applied **downstream of the channel**: the
-PROFET input for the active side is held off by an MCU-controlled per-side gate (sheet 4, `BLANK_L` /
-`BLANK_R`). Left/right brightness stays synchronized whenever neither side is signaling.
+## 1.8 Fail-safe matrix
 
-**Failure cases:**
+| Fault | Low | High | Turn/hazard | Side markers / rear park | Amber park | Honeycomb / DRL strip |
+|---|---|---|---|---|---|---|
+| HMI dead / CAN lost | ✔ | ✔ | ✔ | ✔ | ✔ saved level | ✔ saved level |
+| LCM MCU crash | ✔ | ✔ | ✔ | ✔ | ✔ full (K9) | OFF |
+| LCM unpowered (F6) | ✔ | ✔ | ✔ | ✔ | ✔ full (K9) | OFF |
+| F5 / VDECO lost | ✔ | ✔ | ✔ | ✔ | ✔ full (firmware sees VDECO lost → drops HEALTHY → K9) | OFF |
+| K1 or IGN tap failed | **S1 emergency switch** | ✔ via S1 → stalk feed | ✔ | ✔ via S1 | ✔ full (K9 via S1) | OFF |
+| One projector relay failed | Other side lit; swap relay | ✔ | ✔ | ✔ | ✔ | ✔ |
+| Decorative branch short | ✔ | ✔ | ✔ | ✔ | ✔ | Faulted branch off |
+| Main fuse FM open | ✘ | ✘ | ✔ (factory) | Rear ✔ (factory); front ✘ | ✘ | ✘ |
 
-| Failure | Result |
-|---|---|
-| LCM / MCU dead | Running amber off (fails OFF). Turn signal flashes normally from factory power. ✔ |
-| HMI dead | No effect. ✔ |
-| Blanking firmware bug | Running amber stays at user brightness while the turn element flashes at full. Still visibly flashing (degraded contrast); logged as a fault if detected. |
-| Single-input amber pod | Diode-OR (sheet 5) required. The diodes also stop the LCM back-feeding the factory turn circuit, which would otherwise dimly light the rear turn bulb and dash arrow. |
-| LED load on factory flasher | Removing the factory front bulbs may cause fast flashing ("hyperflash"). Fix with an LED-compatible flasher (O-7), **not** load resistors. |
+The last row is the only total-loss case. It is a single 30 A fuse in a protected location; carry a
+spare.
 
-## 1.8 Fail-safe / emergency operation
+## 1.9 What the owner gives up
 
-| Fault | Low beam | High beam | Turn/hazard | Decorative |
-|---|---|---|---|---|
-| Touchscreen dead | ✔ | ✔ | ✔ | ✔ (saved settings) |
-| LCM MCU crash / hang | ✔ | ✔ | ✔ | OFF. Watchdog WDO forces gates low, then MCU reset and retry |
-| LCM board unpowered | ✔ | ✔ | ✔ | OFF |
-| CAN link lost | ✔ | ✔ | ✔ | ✔ (saved settings; HMI shows "LCM COMM LOST") |
-| K-IGN relay or IGN tap fails | Use **emergency switch** (guarded toggle, separate F8 feed) **or** turn factory knob to HEAD | ✔ via stalk (factory knob in HEAD) | ✔ | OFF |
-| One low-beam relay fails | Other side still lit (separate relay per side); swap relay from glovebox spare | ✔ | ✔ | ✔ |
-| Decorative short on one branch | ✔ | ✔ | ✔ | That branch's PROFET trips and its fuse protects the wire; others continue |
-| RTMR total loss / main fuse open | ✘ new projectors dark. **Mitigation:** pull over; carry spare main fuse. Optional: keep a factory 9006 reversion pigtail in the glovebox | ✘ | ✔ (factory circuit) | ✘ |
-
-The factory lighting system is never permanently disabled. The factory headlamp connectors are
-reached through plug-in pigtails, the DRL disable is a fuse removal, and the factory switch stays in
-the circuit.
+* **There is no headlamps-off with the engine running.** Lows follow the ignition by design (D-2). If
+  that's ever needed (camping, drive-ins), a later revision can add a guarded HMI or hardware
+  "lights off" that only works with the transmission in Park.
+* **Dome override and interior-defeat knob functions** are not replaced in Rev B.

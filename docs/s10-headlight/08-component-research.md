@@ -186,8 +186,9 @@ amber pod:
    PWM edge). Bench test at 250 Hz, 5–100 % duty before accepting.
 3. Inrush current per PWM edge measured; must stay within the PROFET channel rating.
 4. Sealed (IP67 or better) or installed inside the sealed headlamp housing.
-5. Amber pod: **two separate inputs (PARK and TURN) preferred**, as in SAE dual-function park/turn lamps.
-   If single-input, a diode-OR is required (see schematic sheet 5). Verify inputs are electrically
-   isolated from each other by measurement.
-6. If the amber pod replaces factory front park/turn lamps: SAE J588 (turn) / J222 (parking) marking
-   required for road legality.
+5. Amber pod (Rev B, D-3: replaces the factory front lamps): **must be an SAE-certified dual-function
+   park/turn lamp with two separate inputs** (marked for J588 turn and J222 parking), plus a certified
+   amber front side marker (integrated or separate). Single-input pods are no longer acceptable.
+   Verify by measurement that the PARK and TURN inputs are isolated from each other.
+6. Amber park input must tolerate PWM at 250 Hz (bench test). The firmware floor `AMB_MIN_DUTY` is set
+   from a photometric check so the dimmed park lamp stays above the J222 minimum.

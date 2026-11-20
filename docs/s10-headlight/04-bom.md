@@ -1,6 +1,6 @@
-# Deliverable 4 – Preliminary Bill of Materials (Rev A)
+# Deliverable 4 – Preliminary Bill of Materials (Rev B)
 
-The machine-readable BOM is [`bom.csv`](bom.csv) (42 lines). This page summarizes it.
+The machine-readable BOM is [`bom.csv`](bom.csv) (47 lines). This page summarizes it.
 
 **Pricing policy:** a price appears only when it was seen on a real listing on 2026-11-20 (tagged
 [SECONDARY]). Everything else is **TBD**. No prices have been estimated or invented.
@@ -28,11 +28,13 @@ commodity automotive part, but it stays TBD until it has an exact part number.
 | Projectors | 1–3 | Family verified; **confirm SAE/DOT variant** and mounting kit |
 | HMI | 4 | Specs verified; price TBD |
 | Distribution & protection | 5–11 | RTMR configuration and side-post fuse holder TBD |
-| Lighting Control Module (custom PCB) | 12–25 | Key ICs verified; PROFET variant waits on O-4 |
+| Lighting Control Module (custom PCB, inside PDCC) | 12–25 | Key ICs verified; PROFET variant waits on O-4 |
 | Connectors | 26–30 | DT family chosen; contact P/Ns per gauge |
 | Wire & loom | 31–32 | Gauges provisional |
 | Sensors | 33 | NTC part TBD |
-| Decorative LEDs | 34–36 | **Open (O-4)** |
+| Decorative LEDs | 34–35 | **Open (O-4)** |
+| Required amber lamps (park/turn pod, side marker) | 36, 43 | **Open (O-4)**. Must be SAE certified (D-3) |
+| PDCC enclosure, amber OR diodes, fail-ON driver, dimmer resistor | 44–47 | Rev B additions |
 | Vehicle interface | 37 | LED flasher **open (O-7)** |
 | Housing | 38 | Vent part TBD |
 
