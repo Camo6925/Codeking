@@ -1,4 +1,4 @@
-# Deliverable 6 – Assembly & Installation Plan (Rev B)
+# Deliverable 6 – Assembly & Installation Plan (Rev C)
 
 > Prerequisites: open items O-1 (service manual wiring), O-3 (housing envelope), O-4 (decorative
 > parts) and O-5 (battery type) are closed, and `tools/wire_calc.py` has been re-run with measured
@@ -41,7 +41,12 @@
    doesn't load the seal.
 7. Check continuity against the D3 pinout table for every connector before first power.
 
-## 6.3a Headlamp harness (Rev B: one plug at each end)
+## 6.3a Headlamp harness (one plug at each end)
+
+**Lengths are set during the build:** route the harness on the truck, cut to fit plus a service loop,
+then run `python3 tools/wire_calc.py --left <m> --right <m> --main <m>`. If any line says UPSIZE or
+FAIL, use the next heavier gauge for that conductor. A headlamp run up to 4.0 m passes with the
+standard gauges.
 
 * Each headlamp harness is a single 12-conductor cable: a DT06-12S plug at the headlamp end and a
   DT06-12S plug at the PDCC end (left key A, right key B). Wire it pin-for-pin per D3 §3.6.
@@ -52,7 +57,10 @@
 
 ## 6.4 Fuse distribution installation
 
-* **FM:** mount within 300 mm of the battery positive. Side-post GM battery: surface-mount MRBF or
+* **FM (Rev C, top-post battery):** Blue Sea 5191 MRBF terminal fuse block directly on the positive
+  post's 3/8" stud with a 30 A MRBF fuse; 8 AWG ring terminal on its M8 output stud; insulating cap
+  fitted. (If the post has no stud, use a top-post battery terminal with a 3/8" stud.)
+* Rev B note: mount within 300 mm of the battery positive. Side-post GM battery: surface-mount MRBF or
   sealed MIDI holder on a bracket, fed from a side-post auxiliary stud adapter [VERIFY O-5]. Top-post:
   Blue Sea 5191 on the terminal stud. Fit the insulating cap.
 * **PDCC (Rev B):** one enclosure under the driver-side dash or on the kick panel, containing the RTMR
@@ -100,7 +108,7 @@
 * Connector order: J1 power last on connection, first on disconnection.
 * **HMI:** temporary mount for commissioning. The final mount in the headlamp-knob location is out of
   scope. The J5 run is twisted CAN plus 18 AWG 5 V/GND.
-* **Factory interface (Rev B): follow [doc 09](09-factory-switch-integration.md) §4 measurements first.**
+* **Factory interface (Rev B): follow [doc 09](09-factory-switch-integration.md) §5 meter checks first.**
   The steps below are superseded by doc 09 where they differ. In Rev B the old headlamp switch is
   unplugged and replaced by a pigtail, and front turn signals are picked up in the cab.
 * Rev A steps, kept for reference:

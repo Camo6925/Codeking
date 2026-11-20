@@ -33,21 +33,28 @@ V_NOM = 13.5
 BRANCH_LIMIT, TOTAL_LIMIT = 0.03, 0.05
 
 # ---- lengths (one way, metres) — ESTIMATE until measured on the truck ----
+# Defaults are estimates; pass the as-built lengths with --main/--left/--right during the build.
 L_MAIN = 2.0        # battery -> FM -> firewall -> PDCC (driver-side dash)
 L_HL_L = 2.5        # PDCC -> left headlamp connector
 L_HL_R = 3.5        # PDCC -> right headlamp connector
 
 # ---- loads ----
 PRJ = 20.0 / 10.0   # HELLA L4060 "max 20 W" [SECONDARY] at 10 V design minimum = 2.0 A
-HONEY, DRL, AMB_PARK = 1.5, 1.5, 1.0     # ESTIMATE budgets (O-4)
-AMB_TURN, MARKER, AUX = 1.0, 0.5, 0.5     # ESTIMATE (turn is factory-flasher powered)
+HONEY, DRL = 1.5, 1.5                     # Diode Dynamics FlexLight: current NOT published -> budget, MEASURE
+AMB_PARK, AMB_TURN = 0.03, 0.38           # Truck-Lite 4050A minor/major current [SECONDARY retailer data]
+MARKER, AUX = 0.5, 0.5                    # Truck-Lite 10250Y current not published -> budget; fan optional
 DECO_RTN = HONEY + DRL + AMB_PARK + AMB_TURN + MARKER + AUX
 COILS = 9 * 0.15                          # ESTIMATE, take from relay datasheet
 CTRL = 0.6                                # HMI 450 mA @5 V VERIFIED + LCM ESTIMATE
 VDECO = 2 * (HONEY + DRL + AMB_PARK + AUX)
 
+def build_conductors(L_MAIN, L_HL_L, L_HL_R):
+    return [c for c in _conductors(L_MAIN, L_HL_L, L_HL_R)]
+
+
 # conductor: name, awg, current, length, kind('feed'|'return'), inrush_min_fuse, note
-CONDUCTORS = [
+def _conductors(L_MAIN, L_HL_L, L_HL_R):
+  return [
     ("MAIN+",        8,  None, L_MAIN, "feed",   0, "battery -> FM -> PDCC"),
     ("MAIN-",        8,  None, L_MAIN, "return", 0, "PDCC ground stud -> battery -"),
     ("LO_L",        16,  PRJ,  L_HL_L, "feed",   5, "inrush allowance ESTIMATE"),
@@ -68,7 +75,7 @@ CONDUCTORS = [
     ("MARKER_R",    18,  MARKER, L_HL_R, "feed", 2, ""),
     ("AUX_R",       18,  AUX,  L_HL_R, "feed",   3, ""),
     ("DECO_RTN_R",  14,  DECO_RTN, L_HL_R, "return", 0, ""),
-]
+  ]
 # branch paths: (name, feed conductor, return conductor)
 PATHS = [("LO_R", "LO_R", "PRJ_RTN_R"), ("HI_R", "HI_R", "PRJ_RTN_R"),
          ("LO_L", "LO_L", "PRJ_RTN_L"), ("HONEY_R", "HONEY_R", "DECO_RTN_R"),
@@ -84,7 +91,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--temp", type=float, default=85.0)
     ap.add_argument("--csv", action="store_true")
+    ap.add_argument("--main", type=float, default=L_MAIN, help="battery->PDCC one-way length, m")
+    ap.add_argument("--left", type=float, default=L_HL_L, help="PDCC->left headlamp one-way length, m")
+    ap.add_argument("--right", type=float, default=L_HL_R, help="PDCC->right headlamp one-way length, m")
     a = ap.parse_args()
+    CONDUCTORS = build_conductors(a.main, a.left, a.right)
 
     main_i = 4 * PRJ + VDECO + CTRL + COILS + 2 * MARKER
     rows, ok = {}, True
@@ -105,7 +116,8 @@ def main():
         w = csv.DictWriter(sys.stdout, fieldnames=list(next(iter(rows.values()))))
         w.writeheader(); w.writerows(rows.values()); return
 
-    print(f"Conductor temp {a.temp:.0f} C. ALL VALUES PROVISIONAL (lengths and decorative loads are ESTIMATES)\n")
+    print(f"Conductor temp {a.temp:.0f} C. Lengths: main {a.main} m, left {a.left} m, right {a.right} m. "
+          f"PROVISIONAL until loads are measured\n")
     print(f"{'Conductor':12} {'AWG':>3} {'I A':>6} {'L m':>4} {'Vd V':>6} {'Fuse':>5} {'Max':>4}  Check")
     for x in rows.values():
         print(f"{x['name']:12} {x['awg']:3d} {x['I_A']:6.2f} {x['len_m']:4.1f} {x['vdrop_V']:6.3f} "

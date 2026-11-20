@@ -1,6 +1,8 @@
-# Deliverable 1 – System Architecture (Rev B)
+# Deliverable 1 – System Architecture (Rev C)
 
-Rev B incorporates owner decisions D-1 to D-4 (see [README](README.md)):
+Rev C adds owner decisions D-5 to D-8: top-post battery, selected amber/white lamps, no high-beam dash
+indicator, and interior plus dash lighting controlled from the touchscreen. Rev B incorporated D-1 to
+D-4 (see [README](README.md)):
 the factory headlamp switch is removed, low beams follow the ignition, the amber pods replace the factory
 front park/turn/side-marker lamps, and each headlight is a passive assembly with **one** plug,
 home-run to a single custom distribution box.
@@ -15,6 +17,7 @@ home-run to a single custom distribution box.
    | **T1-F – Required, dimmable** | Amber front parking lamp (CH3) | LCM PWM, plus a **fail-ON** hardware bypass relay | Goes to **full certified park intensity** |
    | **T2 – Decorative** | Honeycomb (CH1), white DRL strip (CH2) | LCM (PROFET + ESP32-S3) | **OFF** |
    | **T3 – Interface** | Touchscreen, settings, diagnostics display | HMI (ESP32-S3 4.3") | No lighting effect |
+   | **T3-I – Interior** | Dome ON/AUTO/OFF, dash brightness | LCM photorelays emulating the old knob contacts | Interior = factory AUTO (doors); dash = default level |
 
    Amber running moved from T2 to T1-F because it is now the truck's legally required front parking
    lamp (D-3). A required lamp must not go dark because a controller crashed.
@@ -63,7 +66,7 @@ covered in the sizing (8 AWG main, 14 AWG decorative return), and all checks pas
 ## 1.3 Power flow
 
 ```
-BATTERY (+) ─ FM 30 A MRBF/MIDI (≤ 300 mm from battery) ─ 8 AWG ─ PDCC power stud (VBUS)
+BATTERY (+) top post ─ FM 30 A MRBF in Blue Sea 5191 terminal block (on the post) ─ 8 AWG ─ PDCC power stud (VBUS)
   ├─ F1  5 A ─ K2 K-LO-L ──────────────► Left headlamp pin 1  (low beam)
   ├─ F2  5 A ─ K3 K-LO-R ──────────────► Right headlamp pin 1
   ├─ F3  5 A ─ K4 K-HI-L ──────────────► Left headlamp pin 2  (high beam)
@@ -76,8 +79,7 @@ BATTERY (+) ─ FM 30 A MRBF/MIDI (≤ 300 mm from battery) ─ 8 AWG ─ PDCC p
   ├─ K6 K-MARKER ─┬─ F12 2 A ──────────► Left headlamp pin 8  (front side marker)
   │               └─ F13 2 A ──────────► Right headlamp pin 8
   ├─ F11 3 A ─ K9 K-AMB-FS (fail-ON) ──► amber park nodes L/R (diode-ORed with PROFET CH3)
-  ├─ F15 1 A ◄─ HI_REQ ────────────────► Cluster high-beam indicator
-  ├─ F10 AUX spare   F14 spare   F16 spare
+  ├─ F10 AUX spare   F14 spare   F15 spare   F16 spare
 BATTERY (−) ─ 8 AWG ─ PDCC ground stud ─┬─ PRJ_RTN_L, PRJ_RTN_R  (16 AWG, headlamp pin 3)
                                         ├─ DECO_RTN_L, DECO_RTN_R (14 AWG, headlamp pin 9)
                                         ├─ LCM PGND / LGND (joined once on the LCM)
@@ -85,7 +87,8 @@ BATTERY (−) ─ 8 AWG ─ PDCC ground stud ─┬─ PRJ_RTN_L, PRJ_RTN_R  (16
 FACTORY CIRCUITS (signal level only):
   IGN RUN tap ─ F0 1 A ─ K1 coil
   K7 dry contact ─ old switch pins (park signal) → factory park relay → rear tail/marker/license
-  Factory LF/RF flasher outputs → PDCC → headlamp pin 7 (amber TURN) + LCM sense
+  Fuse taps in underhood LT TURN / RT TURN → PDCC → headlamp pin 7 (amber TURN) + LCM sense
+  LCM photorelays ─ old switch pins 7 / 9 / 10 → BCM: interior ON / defeat, dash dimming
 ```
 
 ## 1.4 Control logic (hardware, no MCU)
@@ -127,16 +130,16 @@ the meter verification procedure. In short:
   IGN_SW.
 * **Rear park/tail:** the K7 dry contact replicates the switch's park signal into the factory park relay.
   The factory power and fusing for the rear lamps are unchanged.
-* **Panel dimming:** resistor emulation of the switch's dimmer signal (Rev B), with a touchscreen-controlled
-  option later.
-* **High-beam indicator:** fed from HI_REQ (the factory headlamp circuit is no longer used).
+* **Dash dimming and interior lights (Rev C):** touchscreen controlled. LCM photorelays emulate the
+  knob's dome-ON, interior-defeat and dimmer contacts, and the BCM keeps its door logic.
+* **High-beam indicator:** not connected (owner decision D-6). The touchscreen shows a high-beam icon.
 * **Factory DRL / automatic headlamps:** disabled (DRL fuse and headlamp relay removed).
 
 ## 1.7 Amber corner: turn override and parking-lamp fail-safe
 
-The amber pod must be an **SAE-certified dual-function park/turn lamp** (separate PARK and TURN
-inputs) with a certified front side marker element (or a separate marker lamp). These are legally
-required lamps now (D-3).
+Selected (D-8): **Truck-Lite 4050A** (4" round, 24-diode, Front/Park/Turn, PL-3 three-wire: ground,
+park, turn; 0.03 A park / 0.38 A turn [SECONDARY]) plus **Truck-Lite 10250Y** (2.5" round amber P2
+marker) as the front side marker. These are legally required lamps (D-3).
 
 ```
  Factory flasher L ────────────────────────────────────────────► TURN input (full intensity)
@@ -177,4 +180,5 @@ spare.
 * **There is no headlamps-off with the engine running.** Lows follow the ignition by design (D-2). If
   that's ever needed (camping, drive-ins), a later revision can add a guarded HMI or hardware
   "lights off" that only works with the transmission in Park.
-* **Dome override and interior-defeat knob functions** are not replaced in Rev B.
+* **With the ignition off,** interior lights work from the doors only (the touchscreen is asleep).
+* **No high-beam indicator in the cluster** (D-6). The touchscreen icon is the only indicator.

@@ -1,4 +1,4 @@
-# Deliverable 5 – Controller Firmware Architecture (Rev B)
+# Deliverable 5 – Controller Firmware Architecture (Rev C)
 
 Architecture only. Implementation starts after the schematic is captured and decorative loads are
 known.
@@ -37,6 +37,7 @@ known.
 | `power_task` | event + 10 Hz | High | Ignition state machine, cranking suspend, shutdown/save sequence |
 | `can_task` | event + 10 Hz TX | Medium | Status broadcast, command reception, HMI heartbeat supervision |
 | `storage_task` | on demand | Low | Debounced NVS commits (2 s after the last change), and an immediate commit at shutdown |
+| `interior_task` | event | Low | Interior mode (AUTO/ON/OFF → PR1/PR2, never both closed) and dash level (→ PR3–PR6 code). Restores saved values at INIT. Opens all photorelays in SHUTDOWN. |
 | `wd_task` | 4 Hz | Highest | Kick TPS3431-Q1 **only if** every other task has checked in during this window (supervised kick) |
 
 ## 5.4 LCM state machine
@@ -93,6 +94,8 @@ struct settings_v1 {
     uint8_t  amb_min_duty;                          // legal floor (service-only)
     uint16_t pwm_hz;                                // default 250
     uint16_t learned_ma[8];                         // per-output nominal current at 100 %
+    uint8_t  interior_mode;                         // 0 AUTO, 1 ON, 2 OFF (defeat)
+    uint8_t  dash_level;                            // 0..15 → dimmer ladder code (table from doc 09 §5.2)
     int16_t  t_warn_c, t_derate_c, t_off_c;
     uint32_t crc32;
 };
@@ -149,6 +152,7 @@ Current estimate per output: `I_on = V_IS_avg / R_SENSE × k_ILIS / duty`. The I
 | 0x30F `LCM_SHUTDOWN` | LCM→HMI | event | reason |
 | 0x310 `HMI_SET` | HMI→LCM | on change | ch, brightness 0–100, seq# |
 | 0x311 `HMI_HEARTBEAT` | HMI→LCM | 2 Hz | uptime, UI state |
+| 0x313 `HMI_INTERIOR` | HMI→LCM | on change | interior_mode, dash_level, seq# (echoed in LCM_STATUS) |
 | 0x312 `HMI_SERVICE` | HMI→LCM | event | learn-loads, clear log, set limits (PIN-gated in UI) |
 
 The LCM echoes accepted setpoints in `LCM_STATUS`, and the HMI slider reflects the echo. That
@@ -158,6 +162,9 @@ confirms each change end to end. Every frame carries a rolling counter and check
 
 1. **Main:** three sliders (Honeycomb, DRL, Amber). The Amber slider's lower stop is the legal floor
    and cannot reach OFF. Live L/R status chips; low/high/turn/park/marker indicators.
+1a. **Interior:** dome AUTO / ON / OFF buttons and a dash-brightness slider. A note on screen says
+   doors control the dome while the truck is off. A high-beam icon on the main screen replaces the
+   cluster indicator (D-6).
 2. **Diagnostics:** per-output current (L | R), housing temperatures, system voltage, relay/feed status.
 3. **Faults:** active faults (red), logged faults (grey), clear-log (service).
 4. **Service (PIN):** learn loads, PWM frequency, temperature thresholds, amber floor, firmware versions.

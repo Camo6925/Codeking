@@ -1,11 +1,14 @@
-# Deliverable 3 – Component & Circuit Schedules (Rev B)
+# Deliverable 3 – Component & Circuit Schedules (Rev C)
 
 Sized values come from [`tools/wire_calc.py`](../../tools/wire_calc.py) (85 °C conductor, 3 % per
 branch, 5 % battery-to-lamp). **All fuse and wire sizes are PROVISIONAL** until:
 (1) the HELLA technical data sheet is obtained,
 (2) inrush is scoped,
 (3) decorative and amber/marker products are chosen and measured, and
-(4) harness lengths are measured.
+(4) as-built harness lengths are entered: run
+`python3 tools/wire_calc.py --main <m> --left <m> --right <m>`. With the defaults (2.0 / 2.5 / 3.5 m)
+everything passes, and a headlamp run passes **up to 4.0 m**. Longer than that, the tool flags
+PRJ_RTN: use 14 AWG for that return.
 
 Rev B harness rule (D-4): **each headlight = one 12-way sealed connector, home-run to the PDCC.**
 No fuses, relays or electronics on the headlights.
@@ -16,45 +19,33 @@ No fuses, relays or electronics on the headlights.
 |---|---|---|---|
 | LO_L/R, HI_L/R | HELLA L4060 max 20 W ÷ 10 V | 2.0 A each | Low: [SECONDARY]; high: [ESTIMATE]; inrush [MEASURE] |
 | PRJ_RTN_L/R | Low + high together | 4.0 A | Derived |
-| HONEY, DRL (each side) | Budget | 1.5 A | [ESTIMATE] O-4 |
-| AMB_PARK (each side) | Budget | 1.0 A | [ESTIMATE] O-4 |
-| AMB_TURN (each side) | Factory flasher powered | 1.0 A | [ESTIMATE]. Returns on DECO_RTN |
-| MARKER (each side) | Budget | 0.5 A | [ESTIMATE] |
+| HONEY, DRL (each side) | Diode Dynamics FlexLight Cool White; current not published | 1.5 A budget | [MEASURE] |
+| AMB_PARK (each side) | Truck-Lite 4050A park ("minor") | 0.03 A | [SECONDARY] |
+| AMB_TURN (each side) | Truck-Lite 4050A turn ("major"), factory-flasher powered | 0.38 A | [SECONDARY]. Returns on DECO_RTN |
+| MARKER (each side) | Truck-Lite 10250Y; current not published | 0.5 A budget | [MEASURE] |
 | AUX (each side) | Optional fan | 0.5 A | [ESTIMATE] |
 | DECO_RTN_L/R | Sum of all decorative, amber, marker and aux | 6.0 A | Derived |
 | CTRL | HMI 450 mA @ 5 V [VERIFIED] + LCM | 0.6 A | Partly verified |
 | Coils | 9 × 0.15 A | 1.35 A | [ESTIMATE]; relay datasheet |
-| **Main feed** | All on, high beam, 10 V | **20.0 A** | P |
+| **Main feed** | All on, high beam, 10 V | **18.0 A** | P |
 
-## 3.2 Tool output (Rev B)
+## 3.2 Tool output (Rev C, default lengths 2.0 / 2.5 / 3.5 m)
 
 ```
-Conductor    AWG    I A  L m   Vd V  Fuse  Max  Check
-MAIN+/MAIN-    8  19.95  2.0  0.103    25   50  OK
-LO_L / HI_L   16   2.00  2.5  0.083     5   15  OK
-PRJ_RTN_L     16   4.00  2.5  0.165     -   15  OK
-LO_R / HI_R   16   2.00  3.5  0.116     5   15  OK
-PRJ_RTN_R     16   4.00  3.5  0.231     -   15  OK
-HONEY/DRL_R   18   1.50  3.5  0.138     3   10  OK
-AMB_PARK_R    18   1.00  3.5  0.092     3   10  OK
-MARKER_R      18   0.50  3.5  0.046     2   10  OK
-DECO_RTN_R    14   6.00  3.5  0.218     -   20  OK     (16 AWG would give 3.6 % branch drop → FAIL)
-
 Path         Branch %  Total %
-LO_R / HI_R      2.57     4.10   OK
-HONEY_R          2.64     4.16   OK
-AMB_PARK_R       2.30     3.82   OK
-Main 20.0 A → FM ≥ 25 A → specify 30 A (smallest MRBF), 8 AWG
+LO_R / HI_R      2.57     3.95   OK
+LO_L             1.84     3.21   OK
+HONEY_R / DRL_R  2.21     3.59   OK
+AMB_PARK_R       1.21     2.59   OK
+MARKER_R         1.53     2.91   OK
+Main 18.0 A → FM ≥ 25 A → 30 A MRBF, 8 AWG.   DECO_RTN 14 AWG, PRJ_RTN 16 AWG (14 AWG if a run > 4.0 m)
 ```
-
-The main feed is **8 AWG** in Rev B (it was 10 AWG in Rev A). With the PDCC in the cab, the 2 m main
-run's voltage drop adds to every lamp's total. 8 AWG keeps every battery-to-lamp path under 5 %.
 
 ## 3.3 Fuse schedule (PDCC, 16 positions)
 
 | ID | Circuit | Rating (P) | Protects | Fed / switched by |
 |---|---|---|---|---|
-| FM | Main feed (at battery) | 30 A MRBF/MIDI | 8 AWG main | — |
+| FM | Main feed (on battery + top post) | 30 A MRBF in Blue Sea 5191 | 8 AWG main | — |
 | F0 | Factory IGN tap → K1 coil | 1 A | tap lead | at tap point |
 | F1 | LO_L | 5 A | 16 AWG | K2 |
 | F2 | LO_R | 5 A | 16 AWG | K3 |
@@ -70,7 +61,7 @@ run's voltage drop adds to every lamp's total. 8 AWG keeps every battery-to-lamp
 | F12 | MARKER_L | 2 A | 18 AWG | K6 |
 | F13 | MARKER_R | 2 A | 18 AWG | K6 |
 | F14 | Spare | — | — | — |
-| F15 | High-beam indicator | 1 A | 20 AWG to cluster | HI_REQ |
+| F15 | Spare (was high-beam indicator; removed per D-6) | — | — | — |
 | F16 | Spare | — | — | — |
 | F21–F28 | LCM outputs HONEY/DRL/AMB/AUX × L/R | 3 A | 18 AWG branches | PROFETs |
 
@@ -89,10 +80,8 @@ SAE J1128 **TXL** unless noted.
 | **Right headlamp harness** (one cable, 12 wires) | PDCC J-HLR → right headlamp | see pinout | — | 3.5 m |
 | IGN tap | Factory IGN → F0 → J-VEH-1 | 20 AWG | Pink | ≤ 1 m |
 | Stalk feed / HI_REQ | J-VEH → column pigtail | 20 AWG | Brown / Lt green | ≤ 1 m |
-| TURN_L / TURN_R | In-cab splice → J-VEH | 18 AWG (carries amber turn current) | Lt blue / Dk blue | ≤ 1.5 m |
-| PARK_SIG / PARK_REF | J-VEH → old switch pigtail | 20 AWG | Lt blue / Orange or Black | ≤ 1 m |
-| DIM_SIG / DIM_REF | J-VEH → old switch pigtail | 20 AWG | Dk green / ref | ≤ 1 m |
-| HI_IND | J-VEH → cluster pigtail | 20 AWG | Lt green/white | ≤ 1 m |
+| TURN_L / TURN_R | Underhood LT/RT TURN fuse taps → firewall → J-VEH | 18 AWG | Lt blue / Dk blue | ≈ 2.5 m, set at build |
+| PARK_SIG, SW_REF, COURTESY_SIG, DEFEAT_SIG, DIM_SIG, DIM_REF | J-VEH → old switch pigtail | 20 AWG | Factory colours | ≤ 1 m |
 | HMI 5 V / GND, CAN | PDCC → HMI | 18 AWG; 20 AWG twisted pair | Red/Black; Yellow/Green | ≤ 1 m |
 | Emergency switch | PDCC → S1 | 18 AWG | Red-White / White | ≤ 1 m |
 
@@ -143,15 +132,15 @@ headlamp or its harness can be swapped as a unit.
 | 1 | IGN_TAP | Factory IGN RUN (F0 1 A at tap) | Drives K1 coil only |
 | 2 | SIG_GND | Ground stud | Reference |
 | 3 | STALK_FEED | Stalk dimmer common | From F9 |
-| 4 | HI_REQ | Stalk HI / flash-to-pass | To K4/K5, K2/K3 (diode), F15 |
-| 5 | TURN_L | Factory LF front turn | Splice. Also LCM sense |
-| 6 | TURN_R | Factory RF front turn | Splice. Also LCM sense |
+| 4 | HI_REQ | Stalk HI / flash-to-pass | To K4/K5, K2/K3 (diode), LCM sense (touchscreen icon) |
+| 5 | TURN_L | Fuse tap, underhood LT TURN | Also LCM sense |
+| 6 | TURN_R | Fuse tap, underhood RT TURN | Also LCM sense |
 | 7 | PARK_SIG | Old switch pin 1 (LT BLU) | K7 dry contact |
-| 8 | PARK_REF | Old switch pin 2/4 or 5 | Per measurement |
-| 9 | HI_IND | Cluster high-beam indicator input | From F15 |
-| 10 | DIM_SIG | Old switch pin 10 (DK GRN) | Resistor emulation |
-| 11 | DIM_REF | Old switch pin 2/4 or 5 | Per measurement |
-| 12 | Spare | — | Cavity plug |
+| 8 | SW_REF | Old switch pin 2/4 or 5 | Common reference (doc 09 §5.2) |
+| 9 | COURTESY_SIG | Old switch pin 7 (DK BLU/WHT) | PR1: interior ON |
+| 10 | DIM_SIG | Old switch pin 10 (DK GRN) | Dimmer ladder PR3–PR6 |
+| 11 | DEFEAT_SIG | Old switch pin 9 (PPL) | PR2: interior OFF |
+| 12 | DIM_REF | Old switch pin 2/4 or 5 | Dimmer ladder reference |
 
 ## 3.8 Relay / switch schedule
 
@@ -169,6 +158,7 @@ headlamp or its harness can be swapped as a unit.
 | U10 | PROFET power latch | IGN or 10 s hold | ≤ 0.6 A |
 | D1–D11 | Coil diode-OR | — | ≤ 0.5 A |
 | D32–D35 | Amber OR node | — | Amber current |
+| PR1–PR6 | Interior ON / defeat / dimmer ladder | LCM GPIO | Signal level, ≥ 60 V photorelays |
 
 All relays: ISO micro 280, 12 V, resistor-suppressed, ≥ 20 A. Glovebox spares: 1 relay, mini fuses
 1/2/3/5/10 A, 1 × 30 A MRBF.

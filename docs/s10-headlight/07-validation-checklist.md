@@ -1,4 +1,4 @@
-# Deliverable 7 – Validation & Safety Checklist (Rev B)
+# Deliverable 7 – Validation & Safety Checklist (Rev C)
 
 Record every result (value, date, initials). Any **FAIL** in a ★ item blocks road use.
 
@@ -76,9 +76,12 @@ current probe, thermocouple meter, IR thermometer, stopwatch, water spray bottle
 
 - [ ] Ignition RUN: rear tail, rear markers and license plate on (K7 emulation); front side markers on.
 - [ ] Ignition OFF: all of the above off immediately; the factory park relay does not stay latched.
-- [ ] High-beam indicator in the cluster lights with stalk HIGH and with flash-to-pass.
-- [ ] Instrument-panel illumination at an acceptable level (dimmer emulation resistor). Record the value.
-- [ ] Dome lamps still operate from the doors.
+- [ ] Touchscreen high-beam icon follows stalk HIGH and flash-to-pass (no cluster indicator, D-6).
+- [ ] Touchscreen interior AUTO: dome follows doors. ON: dome on, doors closed. OFF: dome stays off with
+      a door open.
+- [ ] Touchscreen dash slider: every step changes panel brightness; no step blanks the panel.
+- [ ] Ignition OFF (LCM asleep): dome follows doors; dash returns to the default level next time.
+- [ ] Pull F6 with the ignition on: interior reverts to AUTO, dash to the default level.
 - [ ] **Amber fail-ON:** with the ignition on, (a) unplug the LCM power (pull F6), (b) halt the MCU,
       (c) pull F5. In each case both amber parking lamps go to **full** within 1 s.
 - [ ] Amber slider cannot go below the floor; at the floor the lamp still meets J222 minimum (photometric

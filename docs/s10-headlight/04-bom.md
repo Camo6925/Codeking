@@ -1,6 +1,6 @@
-# Deliverable 4 – Preliminary Bill of Materials (Rev B)
+# Deliverable 4 – Preliminary Bill of Materials (Rev C)
 
-The machine-readable BOM is [`bom.csv`](bom.csv) (47 lines). This page summarizes it.
+The machine-readable BOM is [`bom.csv`](bom.csv) (50 lines). This page summarizes it.
 
 **Pricing policy:** a price appears only when it was seen on a real listing on 2026-11-20 (tagged
 [SECONDARY]). Everything else is **TBD**. No prices have been estimated or invented.
@@ -12,7 +12,10 @@ The machine-readable BOM is [`bom.csv`](bom.csv) (47 lines). This page summarize
 | 1 | HELLA L4060 90 mm LED low beam (012488121) | 2 | $298.57 | $597.14 | partshubdirect.com |
 | 2 | HELLA L4060 90 mm LED high beam (011988031) | 2 | $215.45 | $430.90 | partshubdirect.com |
 | 16 | TI LMR36015-Q1 buck | 2 | $4.10 | $8.20 | Digi-Key |
-| | **Verified-price subtotal** | | | **$1,036.24** | |
+| 6 | Blue Sea 5191 MRBF terminal fuse block (top post) | 1 | $37.99 | $37.99 | currentconnected.com |
+| 34 | Diode Dynamics FlexLight Cool White (honeycomb) | 2 | $39.96 | $79.92 | diodedynamics.com |
+| 35 | Diode Dynamics FlexLight Cool White (DRL) | 2 | $39.96 | $79.92 | diodedynamics.com |
+| | **Verified-price subtotal** | | | **$1,234.07** | |
 
 Other reference prices seen: HELLA plain L4060 high beam $335.28 (fiperformance.com); Blue Sea 5191
 MRBF block $37.99 (currentconnected.com, top-post only); Eaton RTMR 15305-1 20-fuse base with cover
@@ -32,9 +35,10 @@ commodity automotive part, but it stays TBD until it has an exact part number.
 | Connectors | 26–30 | DT family chosen; contact P/Ns per gauge |
 | Wire & loom | 31–32 | Gauges provisional |
 | Sensors | 33 | NTC part TBD |
-| Decorative LEDs | 34–35 | **Open (O-4)** |
-| Required amber lamps (park/turn pod, side marker) | 36, 43 | **Open (O-4)**. Must be SAE certified (D-3) |
-| PDCC enclosure, amber OR diodes, fail-ON driver, dimmer resistor | 44–47 | Rev B additions |
+| Decorative LEDs | 34–35 | Diode Dynamics FlexLight selected; current and PWM bench test pending |
+| Required amber lamps (park/turn pod, side marker) | 36, 43 | Truck-Lite 4050A + 10250Y selected; prices TBD |
+| PDCC enclosure, amber OR diodes, fail-ON driver, dimmer ladder | 44–47 | Rev B/C additions |
+| Interior photorelays, fuse taps | 48–49 | Rev C additions |
 | Vehicle interface | 37 | LED flasher **open (O-7)** |
 | Housing | 38 | Vent part TBD |
 

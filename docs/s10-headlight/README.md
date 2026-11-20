@@ -1,6 +1,6 @@
 # 2001 Chevrolet S10 – Standalone Custom LED Headlight System
 
-Engineering package, revision **B (preliminary)** — 2026-11-20.
+Engineering package, revision **C (preliminary)** — 2026-11-20.
 
 Vehicle: 2001 Chevrolet S10 Extended Cab, 2WD, originally 2.2L automatic.
 
@@ -38,7 +38,7 @@ Vehicle: 2001 Chevrolet S10 Extended Cab, 2WD, originally 2.2L automatic.
 6. Low and high projectors both lit on high beam.
 7. Essential lighting works with the touchscreen and microcontrollers dead.
 
-## Owner decisions (Rev B)
+## Owner decisions
 
 | ID | Decision | Consequence |
 |---|---|---|
@@ -46,6 +46,10 @@ Vehicle: 2001 Chevrolet S10 Extended Cab, 2WD, originally 2.2L automatic.
 | **D-2** | Low beams **on whenever ignition is in RUN** | No headlamp switch needed; simplest fail-safe |
 | **D-3** | Amber corner pods **replace** factory front park/turn/side-marker lamps | They are legally required lamps: SAE-certified dual-input park/turn plus side marker; amber park gets a **fail-ON** relay and a brightness floor |
 | **D-4** | Each headlight is passive, with **one plug**, home-run to the custom fuse/control box; nothing is mounted on the lights | Single 12-way DT per headlight; all fuses, relays and electronics in one **PDCC** under the driver-side dash |
+| **D-5** | Top-post battery; harness lengths set during the build | Blue Sea 5191 MRBF block on the post (30 A). `wire_calc.py --left/--right/--main` checks the as-built lengths |
+| **D-6** | No high-beam dash indicator | Cluster indicator not wired; touchscreen icon instead |
+| **D-7** | Interior lighting and dash dimming controlled from the touchscreen | LCM photorelays emulate the old knob's dome-ON, defeat and dimmer contacts; BCM door logic kept |
+| **D-8** | Use an amber pod and LEDs that fit the intent | Truck-Lite 4050A (park/turn), Truck-Lite 10250Y (P2 side marker), Diode Dynamics FlexLight Cool White (DRL + honeycomb) |
 
 ## Architecture summary
 
@@ -69,11 +73,9 @@ sealed 16-fuse/9-relay module and the Lighting Control Module PCB.
 
 | ID | Item | Resolve by |
 |----|------|-----------|
-| O-1 | Confirm switch, stalk, cluster and front-turn wiring on **this** truck | Meter procedure in doc 09 §4 (switch pinout already found: [SECONDARY]) |
+| O-1 | Five short meter checks (about 30 min total) | Doc 09 §5: IGN tap, switch reference/dimmer, stalk contacts, turn fuses, park current |
 | O-3 | Housing envelope (two 90 mm modules + honeycomb + DRL + amber per side) | [MEASURE] |
-| O-4 | Decorative products + **SAE-certified** amber park/turn pod and side marker | Select, then bench-measure |
-| O-5 | Battery terminal style | Look |
+| O-4 | Products selected (D-8). Bench-measure FlexLight and 10250Y current; 250 Hz PWM test; 4050A I6-vs-J588 compliance check | Bench |
 | O-6 | Which ignition circuit stays hot in CRANK | Meter |
 | O-7 | LED-compatible flasher | Identify factory flasher; test |
-| O-8 | Harness lengths, battery → PDCC and PDCC → each headlamp | [MEASURE]; re-run tool |
 | O-9 | DT size-16 contact for 14 AWG (DECO_RTN) | TE datasheet |

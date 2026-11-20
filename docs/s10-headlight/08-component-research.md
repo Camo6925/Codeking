@@ -175,7 +175,49 @@ cover the whole system, and the size-16 contacts take the 14–20 AWG range used
 
 ---
 
-## 8. Decorative LED products — OPEN (O-4)
+## 8. Selected lamps (Rev C, owner decision D-8)
+
+### 8.1 Amber corner pod: Truck-Lite 4050A
+| Attribute | Value | Status |
+|---|---|---|
+| Description | Signal-Stat, LED, yellow round, 24 diode, Front/Park/Turn, 12 V, PL-3 | [VERIFIED] Truck-Lite product page |
+| Inputs | PL-3 three-wire (ground, park, turn): separate park and turn inputs | [VERIFIED] product title (PL-3) |
+| Current | Turn ("major") 0.38 A; park ("minor") 0.03 A | [SECONDARY] retailer spec |
+| Size | 4.31" round, about 0.57" deep (retailer) | [SECONDARY]; confirm with sample |
+| Mounting | Grommet mount (variants) | [SECONDARY] |
+| SAE | Retailer lists "I6". **I6 is the SAE J1395 front-turn class for vehicles ≥ 2032 mm wide.** The S10 is narrower; its front turn class is J588. A J1395 lamp exceeds J588 minimum intensity, but confirm acceptability with your state inspection and check the lamp markings on the sample. | Compliance check |
+| Price | TBD | — |
+| Why | Real certified dual-function lamp with separate park/turn wires and published currents. Park at 0.03 A means PWM dimming draws almost nothing. | |
+
+Note for design: at 0.03 A the PROFET current sense can't reliably detect an open park element. The LCM
+therefore uses the amber node **voltage** sense to confirm the lamp is powered, and a bench "learn"
+reading as a coarse open check.
+
+### 8.2 Front side marker: Truck-Lite 10250Y
+| Attribute | Value | Status |
+|---|---|---|
+| Description | 10 Series, LED, yellow round, 2 diode, marker/clearance, **P2**, Fit 'N Forget M/C, 12 V | [VERIFIED] Truck-Lite product page |
+| Size | 2.54" (64.5 mm) round, 1.4" (35.6 mm) deep, grommet mount | [VERIFIED] |
+| Current | Not published | **[MEASURE]** (budgeted 0.5 A, actual expected far lower) |
+| Electronics | Sealed in epoxy | [VERIFIED] |
+
+### 8.3 White DRL strip and honeycomb backlight: Diode Dynamics FlexLight, Cool White 6000K
+| Attribute | Value | Status |
+|---|---|---|
+| Colour / length | Cool White 6000K; 50 cm listed (SKU DD0192P on the product page; confirm the SKU per length and colour) | [VERIFIED] Diode Dynamics page |
+| Voltage | 9–16 V | [VERIFIED] |
+| Protection | IP67 | [VERIFIED] |
+| Operating temperature | −40 °C to 85 °C | [VERIFIED]. Sets the housing NTC cutoff ≤ 80 °C |
+| Output | 200 lm (per strip as listed) | [VERIFIED] |
+| Current | Not published | **[MEASURE]** (budgeted 1.5 A per branch) |
+| Dimming | Listed as "dimmable" by a retailer | [SECONDARY]. **Bench-test 250 Hz PWM at 5–100 %** |
+| Price | $39.96 sale / $49.95 regular | [SECONDARY] Diode Dynamics page |
+| Why | Dotless diffused output suits a solid DRL bar and even backlighting behind the honeycomb. Automotive voltage range and temperature rating. One product for both functions means common spares. |
+
+**Rejected:** Diode Dynamics HD LED Switchback strip (DD2116). It has an internal multi-function PWM
+driver with low/high/turn modes, which conflicts with external PWM on the supply.
+
+## 8a. Original acceptance criteria (still applied at bench test)
 
 No candidate has been verified yet. **Acceptance criteria** for any honeycomb backlight, DRL strip or
 amber pod:
