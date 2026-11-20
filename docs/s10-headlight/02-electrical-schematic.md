@@ -60,7 +60,7 @@ headlamp.
  MARKERS       IGN_SW ─|>|D4─┬─[K6 coil]─⏚
                EMER_SW ─|>|D5┘
  PARK SIGNAL   IGN_SW ─|>|D6─┬─[K7 coil]─⏚    K7 contact (dry): J-VEH-7 PARK_SIG ─o/o─ J-VEH-8 SW_REF
-               EMER_SW ─|>|D7┘                 → old switch pins 1 and (2/4 or 5), per 09 §4.2
+               EMER_SW ─|>|D7┘                 → old switch pins 1 and (2/4 or 5), per 09 §5.2
  DECORATIVE    IGN_SW ─────────[K8 coil]─⏚    (no EMER: decorative stays off in emergency)
  AMBER FAIL-ON IGN_SW ─|>|D8─┬─[K9 coil]─ FS_DRV (LCM fail-ON driver, sheet 4)
                EMER_SW ─|>|D9┘
