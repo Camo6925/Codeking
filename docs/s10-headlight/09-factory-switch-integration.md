@@ -1,7 +1,7 @@
-# Factory Headlamp Switch Removal & Vehicle Integration (Rev D)
+# Factory Headlamp Switch Removal & Vehicle Integration (Rev E)
 
-Owner decisions: the factory headlamp switch is **removed** (D-1). **Everything**, including interior
-lighting and dash illumination, is controlled from the touchscreen (D-7). The high-beam dash indicator
+Owner decisions: the factory headlamp switch is **removed** (D-1). Dash brightness is set from the
+screen; the **interior/dome light keeps working from the doors** as factory (D-17). The high-beam dash indicator
 is **not** required by the owner (D-6). The lighting system has its own independent fuse box, and
 factory circuits supply **signals only** (D-12). Off-road vehicle (D-9).
 
@@ -19,35 +19,23 @@ one confirming meter check (§5) before the pigtails are built.
 | 4 | ORN | Battery positive | Insulated |
 | 5 | BLK | Ground | SW_REF candidate (if signals switch to ground) |
 | 6 | — | Not used | — |
-| 7 | DK BLU/WHT | Courtesy lamp switch signal (knob "dome ON") | **Touchscreen: Interior ON** via LCM photorelay PR1 |
+| 7 | DK BLU/WHT | Courtesy lamp switch signal (knob "dome ON") | Insulated. Dome works from the doors (D-17) |
 | 8 | PPL/WHT | Headlamps OFF signal (auto-headlamp override) | Insulated |
-| 9 | PPL | Interior lamp defeat signal | **Touchscreen: Interior OFF (defeat)** via LCM photorelay PR2 |
-| 10 | DK GRN | Instrument-panel lamps dimmer signal | **Touchscreen: Dash brightness** via LCM photorelay-switched resistor ladder PR3–PR6 |
+| 9 | PPL | Interior lamp defeat signal | Insulated. Dome works from the doors (D-17) |
+| 10 | DK GRN | Instrument-panel lamps dimmer signal | **Touchscreen: Dash brightness** via control-module photorelay-switched resistor ladder PR1–PR4 |
 
 A **mating pigtail** plugs into the factory connector, so nothing is cut. Plugging the original switch
 back in returns the truck to stock.
 
-## 2. Interior and dash lighting from the touchscreen
+## 2. Interior light and dash brightness
 
-The body control module (BCM) keeps doing the door logic (dome on with door open, fade, battery-saver).
-The LCM only replaces the knob's three interior contacts, so factory behaviour and protection are
-preserved.
-
-| Touchscreen control | What the LCM does | Factory result |
-|---|---|---|
-| Interior: **AUTO** (default) | PR1 open, PR2 open | Dome follows doors (factory behaviour) |
-| Interior: **ON** | PR1 closed (pin 7 ↔ SW_REF) | Dome on (like rotating the knob to dome) |
-| Interior: **OFF** | PR2 closed (pin 9 ↔ SW_REF) | Dome stays off with doors open (defeat) |
-| Dash brightness slider (8–16 steps) | PR3–PR6 short sections of a binary-weighted resistor string between pin 10 and its reference | BCM/cluster dims panel lamps exactly as with the knob |
-
-* **Photorelays** (solid-state, optically isolated, polarity-independent, ≥ 60 V) make the LCM a "dry
-  contact" whether the factory signals switch to B+ or to ground. Part class: AEC-Q101 automotive
-  photorelay. **[UNVERIFIED part, select at schematic capture]**.
-* **Fail state:** with the LCM unpowered (ignition off, or a fault), every photorelay is open, so
-  interior = AUTO (doors work normally). The dimmer string at "all open" is sized during build (§5.2)
-  to a comfortable mid brightness, which becomes the default.
-* With the ignition off, the LCM and touchscreen are asleep, so interior lighting is controlled by the
-  doors through the BCM, exactly as stock. Touchscreen interior control works whenever the ignition is on.
+* **Interior/dome light:** unchanged factory operation. The doors switch it through the BCM (fade,
+  battery-saver included). The old switch's dome-ON (pin 7) and defeat (pin 9) wires are insulated
+  inside the pigtail. This system never touches the dome circuit.
+* **Dash brightness:** a screen slider. The control module switches a binary resistor ladder (PR1–PR4
+  photorelays) between old-switch pin 10 (DK GRN) and its reference. That is electrically what the
+  knob's dimmer did, so the BCM/cluster dims the panel exactly as before. With the module off (key off,
+  or a fault) all photorelays are open, giving the default level chosen at build (§5.2).
 
 ## 3. Front turn signals (signal pickup only)
 
@@ -58,13 +46,28 @@ The 1999–2004 underhood fuse block has **separate front-turn fuses**: `LT TURN
   tap wire carries only the optocoupler input current (≈1 mA). It is a signal, not lamp power. Match
   the tap to the block's fuse type (mini vs ATO).
 * The tap wires run a short distance to the FRB `J-TURN` connector → **Turn Interface Module**: an
-  optocoupler (galvanic isolation) switches a smart high-side switch powered from FRB fuse F10
-  (always hot), which drives the SS3 main beam through F17/F18. A second opto channel gives the LCM
+  optocoupler (galvanic isolation) switches a smart high-side switch powered from fuse-box fuse F8
+  (always hot), which drives the SS3 main beam through F6 (left) / F7 (right). A second opto channel gives the LCM
   an isolated turn status.
 * Hazards work with the key off; turn timing stays under the factory flasher.
 * The factory forward wires to the removed front lamps become dead ends: insulate and seal them.
 * The factory flasher now sees almost no load, so a **load-independent electronic flasher** is
   required (O-7).
+
+## 3a. Rear-light status pickup (D-16, read-only)
+
+Fuse taps with **1 A** fuses in the factory underhood block feed high-impedance sense inputs (≈0.24 mA
+each) through the fuse-box `J-REAR` connector to the control module:
+
+| Factory fuse | Meaning | Screen |
+|---|---|---|
+| `LR PRK` | Left rear park/tail | Tail L |
+| `RR PRK` | Right rear park/tail | Tail R |
+| `STOPLP` | Stop lamps | Brake |
+| `B/U LP` | Back-up lamps | Reverse |
+
+The tails themselves are commanded by relay K5 (dry contact on old switch pin 1) whenever the
+ignition is on, with no screen or controller involved.
 
 ## 4. Factory items removed or disabled (underhood fuse block unless noted)
 
@@ -83,7 +86,7 @@ The 1999–2004 underhood fuse block has **separate front-turn fuses**: `LT TURN
 Module" (an ignition-fed circuit). Alternative: fuse **15** "4WD switch, Engine controls". The tap
 carries only the K1 coil (≈0.15 A, a signal-level enable) through F0 1 A; K1's contacts switch FRB power. Confirm in §5.1 that it stays hot in CRANK.
 
-Interior-related IP fuses for reference: **8** "Courtesy Lamps, Inadvertent Power Relay", **12**
+Interior-related IP fuses (all stay installed, untouched): **8** "Courtesy Lamps, Inadvertent Power Relay", **12**
 "Interior Lights", **5** "Parking Lamps, … BCM, Ashtray Lamp". Leave all installed.
 
 ## 5. Remaining meter checks (only what research could not settle)
@@ -97,8 +100,6 @@ IP fuse 11 (then 15 if needed): probe the fuse's test points. OFF = 0 V; RUN = 1
 ### 5.2 Headlamp switch on the bench: 10 minutes
 1. Continuity, knob OFF → PARK: which pin does **1** connect to, **2/4 (B+)** or **5 (GND)**? That pin is
    SW_REF.
-2. Knob rotated to the dome position: pin **7** connects to the same SW_REF? Knob to the defeat
-   position: pin **9** to SW_REF?
 3. Dimmer: resistance **pin 10 ↔ SW_REF** at min, ¼, ½, ¾, max. These five numbers set the resistor
    ladder values and the default (all-open) level.
 

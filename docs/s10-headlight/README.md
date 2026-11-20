@@ -1,20 +1,20 @@
 # 2001 Chevrolet S10 – Standalone Custom LED Headlight System
 
-Engineering package, revision **D (preliminary)** — 2026-11-20. **Off-road vehicle; not intended for road use.**
+Engineering package, revision **E (preliminary)** — 2026-11-20. **Off-road vehicle; not intended for road use.**
 
 Vehicle: 2001 Chevrolet S10 Extended Cab, 2WD, originally 2.2L automatic.
 
 | # | Document | Status |
 |---|----------|--------|
 | 0 | [Component research & verification log](08-component-research.md) | Key parts verified; decorative/amber products open |
-| 1 | [System architecture](01-system-architecture.md) | **Rev D** |
-| 2 | [Electrical schematic](02-electrical-schematic.md) | **Rev D**, preliminary |
-| 3 | [Circuit schedules (fuses, wire, connectors, pinouts, relays, sensors)](03-circuit-schedules.md) | **Rev D**, provisional values flagged |
-| 4 | [Bill of materials](04-bom.md) / [bom.csv](bom.csv) | Rev D |
-| 5 | [Controller firmware architecture](05-firmware-architecture.md) | Rev D |
-| 6 | [Assembly & installation plan](06-assembly-installation.md) | Rev D |
-| 7 | [Validation & safety checklist](07-validation-checklist.md) | Rev D |
-| 9 | [Factory headlamp switch removal & vehicle integration](09-factory-switch-integration.md) | Rev D |
+| 1 | [System architecture](01-system-architecture.md) | **Rev E** |
+| 2 | [Electrical schematic](02-electrical-schematic.md) | **Rev E**, preliminary |
+| 3 | [Circuit schedules (fuses, wire, connectors, pinouts, relays, sensors)](03-circuit-schedules.md) | **Rev E**, provisional values flagged |
+| 4 | [Bill of materials](04-bom.md) / [bom.csv](bom.csv) | Rev E |
+| 5 | [Controller firmware architecture](05-firmware-architecture.md) | Rev E |
+| 6 | [Assembly & installation plan](06-assembly-installation.md) | Rev E |
+| 7 | [Validation & safety checklist](07-validation-checklist.md) | Rev E |
+| 9 | [Factory headlamp switch removal & vehicle integration](09-factory-switch-integration.md) | Rev E |
 | — | [`tools/wire_calc.py`](../../tools/wire_calc.py) | Verifies wire/fuse/voltage drop; exits non-zero on failure |
 
 ## Verification legend
@@ -44,33 +44,34 @@ Vehicle: 2001 Chevrolet S10 Extended Cab, 2WD, originally 2.2L automatic.
 | D-2 | Low beams on whenever ignition is in RUN | No headlamp switch needed |
 | D-4 | Passive headlamps, **one plug each**, home-run to the fuse box | Single 12-way DT per headlamp |
 | D-5 | Top-post battery; lengths set during build | Blue Sea 5191 + 30 A MRBF on the post; `wire_calc.py` checks as-built lengths |
-| D-6 | No high-beam dash indicator | Touchscreen icon only |
-| D-7 | Interior lights and dash dimming via the touchscreen | LCM photorelays on the old switch lines; BCM door logic kept |
+| D-6 | No high-beam dash indicator | Screen icon only |
+| D-7 | Dash dimming via the screen | Control-module resistor ladder on the old dimmer wire (interior part superseded by D-17) |
 | **D-9** | **Off-road truck**: road-lighting regulations are not constraints | Fail-ON amber relay, brightness floor, SAE-certified lamp requirement and compliance checklist removed |
 | **D-10** | No side markers | K6, F12/F13 and the marker lamps removed; headlamp pin 8 spare |
 | **D-11** | Amber corner = **square pod** matching the other lights | **Diode Dynamics SS3** (amber, amber backlight): backlight = dimmable running light (CH3), main beam = turn signal. The pod gives main beam priority over backlight internally |
+| **D-13** | **One control signal and one fuse per pair**; only turn signals per side | 3 PWM pair outputs; pair fuses split L/R in the fuse box; low and high beams one relay + one fuse per pair; fuse box back to **16 positions** |
+| **D-14** | Wiring chain: **3.5" screen → control → standalone fuse box → headlight connectors** | Documents and harness drawn in that order |
+| **D-15** | 3.5" control screen | Waveshare ESP32-S3-Touch-LCD-3.5 (320×480) + external CAN transceiver |
+| **D-16** | Screen ensures the rear lights work with the headlights | K5 hardware tail command + screen status for tail L/R, brake, reverse, turn |
+| **D-17** | Interior light works by the doors as factory | Dome circuit untouched; old switch dome wires insulated |
 | **D-12** | **Independent fuse box**, as in the original power architecture | Standalone sealed Fuse/Relay Box (FRB) near the battery fuses **every** lamp branch, turn lamps included. LCM is a separate module in the cab. Factory circuits provide signals only (turn signals through optocouplers) |
 
 Superseded: D-3 (amber lamps as legally required lamps, replaced by D-9/D-11) and D-8's lamp choices
 (Truck-Lite 4050A/10250Y, replaced by the SS3; FlexLight retained).
 
-## Architecture summary
+## Architecture summary (read and wire in this order)
 
 ```
-BATTERY → 30 A MAIN FUSE (on post) → INDEPENDENT FUSE/RELAY BOX (FRB) → fused branches →
-   ├─ each headlamp: one 12-way harness (low, high, honeycomb, DRL, amber run, amber turn, NTC, fan)
-   ├─ LCM (cab): decorative PWM switching; outputs return through FRB branch fuses
-   └─ TIM (in FRB): factory turn/hazard signal → optocoupler → smart switch → SS3 main beam
+3.5" CONTROL SCREEN ─CAN─► CONTROL MODULE ─3 pair outputs─► STANDALONE FUSE BOX ─split L/R─► HEADLIGHT CONNECTORS
+ (dash)                    (behind dash)                     (under hood, battery)            (one 12-way each)
+                                                             + low/high pair relays, tail relay,
+                                                               turn module (per side), rear sense
+Power: battery → 30 A main fuse on post → fuse box → lamps (and one feed back to the control module)
 ```
 
-* **Headlights:** low and high beams are switched by plug-in relays with hardwired logic (ignition,
-  stalk, emergency switch). No microcontroller is in the path.
-* **Turn signals and hazards:** work with the key off. They are independent of the controller and
-  powered from the FRB.
-* **Decorative lighting:** honeycomb, DRL and amber running light are on three PWM channels with L/R
-  synchronized, and fail OFF.
-* **Touchscreen:** controls brightness, interior and dash lighting, and diagnostics over CAN. It is
-  never in a lighting path.
+Each headlight holds low beam, high beam and three controlled lights (honeycomb, DRL strip, SS3 amber
+pod). Each pair shares one signal and one fuse. Turn signals are per side, from the factory flasher
+through an optically isolated turn module. Interior lights stay on factory door control.
 
 ## Open items
 
@@ -78,9 +79,10 @@ BATTERY → 30 A MAIN FUSE (on post) → INDEPENDENT FUSE/RELAY BOX (FRB) → fu
 |----|------|-----------|
 | O-1 | Five short meter checks | Doc 09 §5 |
 | O-3 | Housing fit: two 90 mm projectors + SS3 (3.3" × 3.8" envelope per DD guide) + honeycomb + DRL | [MEASURE] |
+| O-12 | 3.5" screen operating-temperature rating (not found on the Waveshare page) | Ask Waveshare / test |
 | O-4 | Bench: FlexLight current + 250 Hz PWM; SS3 backlight PWM; SS3 pin 1/2 assignment | Bench |
 | O-6 | IP fuse 11 hot in CRANK | Meter (doc 09 §5.1) |
 | O-7 | Load-independent electronic flasher (factory flasher now sees only opto loads) | Identify and fit |
 | O-9 | DT size-16 contact for 14 AWG | TE datasheet |
-| O-10 | FRB RTMR configuration (≥ 22 fuses, ≥ 7 relays, room for TIM + diode board) | Eaton datasheet |
+| O-10 | Fuse box RTMR configuration (16 fuses, 6 relays, room for turn module + diode board) | Eaton datasheet |
 | O-11 | Confirm the SS3 matches your other pods (if they're a different brand or size, any square pod with a separate backlight wire drops in the same way) | Owner |

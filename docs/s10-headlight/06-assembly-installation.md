@@ -1,4 +1,8 @@
-# Deliverable 6 – Assembly & Installation Plan (Rev D)
+# Deliverable 6 – Assembly & Installation Plan (Rev E)
+
+**Wire it in this order: screen → control module → standalone fuse box → headlight connectors.**
+Each lamp pair has one control wire and one fuse. The fuse box splits each pair to the left and right
+harnesses. Only the turn signals are per side.
 
 > Prerequisites: open items O-1 (service manual wiring), O-3 (housing envelope), O-4 (decorative
 > parts) and O-5 (battery type) are closed, and `tools/wire_calc.py` has been re-run with measured
@@ -112,7 +116,9 @@ separate DTP 2-way with 12 AWG; see schematic sheet 7).
   1. Pull the DRL, HDLP PWR, LT HDLP, RT HDLP and F PRK fuses, and the factory headlamp relay.
   2. Fuse taps (1 A) in the underhood LT TURN and RT TURN fuses → FRB J-TURN (signal only, opto inputs).
   3. Fuse tap in IP fuse 11 → F0 1 A → T3-1 (K1 coil).
-  4. Old headlamp-switch connector → mating pigtail → T3 (park signal) and LCM J-INT (interior/dash).
+  4. Old headlamp-switch connector → mating pigtail → T3 (park signal) and control-module J-INT (dash
+     dimmer only). Pins 7 and 9 (dome) are insulated, so the dome stays on door control.
+  4a. Rear-status fuse taps (1 A) in LR PRK, RR PRK, STOPLP and B/U LP → fuse box J-REAR.
   5. Column-switch dimmer contacts → T3-3/T3-4 (stalk feed / HI request).
   6. Fit a load-independent electronic flasher (O-7).
 
@@ -124,15 +130,16 @@ Follow [D7](07-validation-checklist.md) in order: bench → stationary vehicle �
 
 | Symptom | Likely cause | Check |
 |---|---|---|
-| One low beam out | F1/F2 blown, K2/K3 failed, connector, or module | HMI shows "FEED FAULT"? Swap K2↔K3 (identical relays). Measure headlamp connector pin 1 with ignition on. |
-| Both low beams out, ignition on | K1 K-IGN, F7, F0/IGN tap, or the coil diode network | Measure IGN_SW at RTMR. Use emergency switch S1 to get home. |
-| High beam doesn't come on, low stays | HI_REQ missing (stalk re-pin, F9 stalk feed) | Measure T3-4 with stalk HIGH; check F9. |
+| One low beam out (other lit) | Connector, side wire or module on that side (the pair fuse and relay are shared) | Measure pin 1 at that headlight connector with ignition on; check the split in the fuse box. (Swap test: K2↔K3 are identical relays). Measure headlamp connector pin 1 with ignition on. |
+| Both low beams out, ignition on | **F1 or K2 (pair)**, or K1, F11, F0/IGN tap, coil diodes | Measure IGN_SW at RTMR. Use emergency switch S1 to get home. |
+| High beam doesn't come on, low stays | HI_REQ missing (stalk re-pin, F13 stalk feed), or F2/K3 | Measure T3-4 with stalk HIGH; check F9. |
 | High beams on in daytime with stalk in LOW | Factory DRL still active (series high-beam mode) | Repeat the DRL disable step and confirm with a meter. |
 | Low beam turns off on high beam | Diode D3 open or missing | Measure the K2/K3 coils with stalk HIGH. |
 | Turn signal hyperflash | Factory flasher now sees only opto load | Fit load-independent electronic flasher (O-7). |
 | Rear turn bulb glows dimly with running amber on | Back-feed: missing/failed D31 (single-input pod) or dual-input pod internally linked | Check diode; measure pod input isolation. |
-| Decorative all off, headlamps fine | IGN_OK/WDOK gating low, VDECO missing (F5/K8), LCM fault | HMI fault page; measure VDECO at T1-1; watchdog reset counter. |
-| One decorative branch off | PROFET channel latched (short/OT), FRB branch fuse (F11–F16, F19, F20), open circuit | HMI shows the exact channel. Check fuse, connector pin, element. Re-cycle ignition to clear latch. |
+| Decorative all off, headlamps fine | IGN_OK/WDOK gating low, VDECO missing (F9/K4), control module fault | HMI fault page; measure VDECO at T1-1; watchdog reset counter. |
+| One decorative pair off (both sides) | Control channel latched (short/OT) or pair fuse F3/F4/F5/F14 |
+| One side of a pair off | That side's wire, connector pin or strip/pod (screen shows ONE SIDE OUT) | HMI shows the exact channel. Check fuse, connector pin, element. Re-cycle ignition to clear latch. |
 | Screen blank, lighting normal | HMI power/CAN/HMI hardware | +5 V at J-HMI pin 1; CAN termination 60 Ω across H–L with power off. |
 | Controller never powers off | Latch hold stuck (U15/U10), IGN_SW back-fed | Measure IGN_SW = 0 V with key off; measure V_CT decaying. |
 | Battery drain | Latch stuck on, emergency switch left on, factory switch left on | Measure key-off current at the battery (target < 100 µA for this system alone). |

@@ -1,4 +1,4 @@
-# Deliverable 7 – Validation & Safety Checklist (Rev D)
+# Deliverable 7 – Validation & Safety Checklist (Rev E)
 
 Record every result (value, date, initials). Any **FAIL** in a ★ item blocks road use.
 
@@ -72,17 +72,23 @@ current probe, thermocouple meter, IR thermometer, stopwatch, water spray bottle
 - [ ] With the LCM unplugged: turn and hazard still fully functional.
 - [ ] Running amber on, no turn: rear turn bulb and dash arrow **dark** (no back-feed).
 
-## 7.7a Switch-removal functions, turn module and interior ★
+## 7.7a Switch-removal functions, turn module, rear lights, pairs ★
 
 - [ ] Ignition RUN: rear tail and license lamps on (K7). Ignition OFF: off immediately.
-- [ ] Hazards with the **key off**: both SS3 main beams flash (TIM on always-hot F10).
+- [ ] Hazards with the **key off**: both SS3 main beams flash (TIM on always-hot F8).
 - [ ] Turn L/R with ignition on: that side's SS3 main flashes at full; its backlight stays off for the
       whole signaling period; the other side's backlight unchanged.
 - [ ] Unplug T1/T2 (LCM off): turn and hazards still work.
 - [ ] Factory turn circuit load: ≈1 mA per side (meter in series). Flash rate normal with the electronic flasher.
 - [ ] Touchscreen high-beam icon follows stalk HIGH and flash-to-pass (D-6).
-- [ ] Touchscreen interior AUTO / ON / OFF and the dash slider work. Key off: dome follows doors.
-- [ ] Pull F6 with the ignition on: interior reverts to AUTO, dash to the default level.
+- [ ] Dome light: opens/closes with the doors exactly as factory, key on and off (no screen control).
+- [ ] Dash slider changes panel brightness; pull F10 → dash returns to the default level.
+- [ ] Rear lights: ignition on → tails on (K5) and the screen shows Tail L/R lit; press brake → Brake
+      icon; select reverse → Reverse icon; turn L/R → arrows. Pull the factory LR PRK fuse → screen shows
+      "TAIL LIGHTS NOT ON".
+- [ ] Pairs: each slider changes **both** sides identically. Unplug one side's honeycomb → that side
+      off, other side on, screen shows "HONEYCOMB: ONE SIDE OUT". Repeat for DRL and amber running.
+- [ ] Turn L only flashes the left SS3 main beam; the right SS3 is unaffected.
 - [ ] With the DRL fuse and factory headlamp relay removed, no factory module turns anything on in
       darkness (cover the ambient sensor).
 - [ ] Key-off current of the whole lighting system after the 10 s timeout: < 100 µA (record).
@@ -109,11 +115,11 @@ current probe, thermocouple meter, IR thermometer, stopwatch, water spray bottle
 
 ## 7.10 Short-circuit & protection coordination ★
 
-- [ ] Short each projector feed at the headlamp connector (through a test fuse holder): only F1–F4
-      clears; FM intact; other projectors unaffected.
-- [ ] Short IGN_SW: F7 clears; the emergency switch still provides low beams.
-- [ ] Remove F5 (VDECO): decorative off and faulted; projectors unaffected.
-- [ ] Remove F6 (CTRL): LCM and HMI off; projectors and turn signals unaffected.
+- [ ] Short a projector feed at a headlamp connector (through a test fuse holder): only that pair's fuse (F1 or F2)
+      clears; FM intact; the other pair and turn signals unaffected.
+- [ ] Short IGN_SW: F11 clears; the emergency switch still provides low beams.
+- [ ] Remove F9 (VDECO): decorative off and faulted; projectors unaffected.
+- [ ] Remove F10 (CTRL): control module and screen off; projectors, tails and turn signals unaffected.
 
 ## 7.11 Trail test & aiming ★
 

@@ -1,4 +1,7 @@
-# Deliverable 5 – Controller Firmware Architecture (Rev D)
+# Deliverable 5 – Controller Firmware Architecture (Rev E)
+
+Rev E: three **pair** channels (one output each for honeycomb, DRL, amber running), a 3.5" screen,
+a rear-light status page, and interior lights left to the factory door logic.
 
 Architecture only. Implementation starts after the schematic is captured and decorative loads are
 known.
@@ -20,7 +23,7 @@ known.
 
 | | LCM | HMI |
 |---|---|---|
-| Hardware | ESP32-S3-WROOM-1-N8 on custom PCB | Waveshare ESP32-S3-Touch-LCD-4.3B |
+| Hardware | ESP32-S3-WROOM-1-N8 on custom PCB | Waveshare ESP32-S3-Touch-LCD-3.5 (320×480, ST7796 + FT6336) with an external CAN transceiver on its GPIO header |
 | Framework | ESP-IDF (FreeRTOS) | ESP-IDF + LVGL (Waveshare provides ESP-IDF/LVGL examples) |
 | Radios | Wi-Fi/BT **disabled** (frees ADC2, lowers EMI and attack surface) | Disabled in production; optional BLE for service later |
 | Storage | NVS (wear-levelled, power-fail-safe commits) | None required (it may cache UI state) |
@@ -30,13 +33,13 @@ known.
 
 | Task | Rate | Priority | Responsibility |
 |---|---|---|---|
-| `io_task` | 1 kHz tick | High | Debounce digital inputs (IGN_OK, TURN_L/R, LO/HI/PARK_REQ, RLY ×4); timestamp turn edges |
-| `pwm_task` | 100 Hz | High | Compute duty per channel (setpoint × gamma × derate × ramp); apply per-side turn blanking (`ALLOW_L/R`); drive LEDC |
+| `io_task` | 1 kHz tick | High | Debounce inputs: IGN_OK, TURN_L/R, HI_REQ, LOW_FEED, HIGH_FEED, TAIL_L/R, BRAKE, REVERSE |
+| `pwm_task` | 100 Hz | High | Compute duty per channel (setpoint × gamma × derate × ramp); one output per pair (no per-side blanking; the SS3 gives turn priority internally); drive LEDC |
 | `diag_task` | 50 Hz | Medium | Read ADC (IS ×4, voltages, NTCs); estimate currents; run fault state machines |
 | `power_task` | event + 10 Hz | High | Ignition state machine, cranking suspend, shutdown/save sequence |
 | `can_task` | event + 10 Hz TX | Medium | Status broadcast, command reception, HMI heartbeat supervision |
 | `storage_task` | on demand | Low | Debounced NVS commits (2 s after the last change), and an immediate commit at shutdown |
-| `interior_task` | event | Low | Interior mode (AUTO/ON/OFF → PR1/PR2, never both closed) and dash level (→ PR3–PR6 code). Restores saved values at INIT. Opens all photorelays in SHUTDOWN. |
+| `dash_task` | event | Low | Dash level (→ PR1–PR4 ladder code). Interior/dome lights are NOT controlled (factory door logic). Restores saved values at INIT. Opens all photorelays in SHUTDOWN. |
 | `wd_task` | 4 Hz | Highest | Kick TPS3431-Q1 **only if** every other task has checked in during this window (supervised kick) |
 
 ## 5.4 LCM state machine
@@ -77,8 +80,11 @@ known.
 * Thermal derate: `derate = 1.0` below the warning temperature, falling linearly to 0.5 at the derate
   temperature, and 0 (off) at the cutoff temperature. Thresholds live in config and are set from the
   component ratings.
-* Turn blanking: per §1.7 of the architecture. `ALLOW_side` goes low while `turn_active[side]`, and
-  hazards blank both sides.
+* No per-side signals: each pair gets one duty. Turn override is handled by the SS3 itself (main
+  beam priority) and by the Turn Interface Module in hardware.
+* Rear lights (D-16): `rear_task` checks that TAIL_L and TAIL_R are present within 500 ms of ignition ON
+  (K5 drives the factory park relay). If not, the screen shows "TAIL LIGHTS NOT ON – check K5 / factory
+  park fuses". BRAKE and REVERSE are shown as status only.
 
 ## 5.6 Settings storage (NVS)
 
@@ -87,8 +93,7 @@ struct settings_v1 {
     uint16_t magic, version;
     uint8_t  bright_ch1, bright_ch2, bright_ch3;   // 0–100 %
     uint16_t pwm_hz;                                // default 250
-    uint16_t learned_ma[8];                         // per-output nominal current at 100 %
-    uint8_t  interior_mode;                         // 0 AUTO, 1 ON, 2 OFF (defeat)
+    uint16_t learned_ma[4];                         // per-PAIR nominal current at 100 % (honey, drl, amb, fan)
     uint8_t  dash_level;                            // 0..15 → dimmer ladder code (table from doc 09 §5.2)
     int16_t  t_warn_c, t_derate_c, t_off_c;
     uint32_t crc32;
@@ -107,7 +112,7 @@ Current estimate per output: `I_on = V_IS_avg / R_SENSE × k_ILIS / duty`. The I
 
 | Fault | Condition (all thresholds provisional) | Persistence | Action | HMI message |
 |---|---|---|---|---|
-| OPEN | duty ≥ 20 % and I_on < 0.5 × learned | 2 s | Flag only (output stays commanded) | "LEFT DRL OPEN CIRCUIT" |
+| OPEN / ONE SIDE OUT | duty ≥ 20 % and I_on < 0.75 × learned (pair: one side lost ≈ 0.5 ×) | 2 s | Flag only (output stays commanded) | "LEFT DRL OPEN CIRCUIT" |
 | OVERCURRENT | I_on > 1.5 × learned or > abs limit | 200 ms | Channel off; retry once after 5 s; then latch until next ignition cycle | "RIGHT HONEYCOMB OVERCURRENT" |
 | SHORT / OT | IS at fault level (≥ 4.4 mA class) | 3 consecutive samples | Channel off; latch until next ignition cycle | "LEFT AMBER SHORT/OVERTEMP" |
 | PROJ FEED | request active and RLY sense low | 300 ms | Flag | "LEFT LOW BEAM: FUSE F1 / RELAY K2" |
@@ -138,14 +143,14 @@ Current estimate per output: `I_on = V_IS_avg / R_SENSE × k_ILIS / duty`. The I
 | ID | Dir | Rate | Payload |
 |---|---|---|---|
 | 0x300 `LCM_STATUS` | LCM→HMI | 10 Hz | state, IGN, LO/HI/PARK req, relay sense bits, turn L/R, setpoints ch1–3, active duty ch1–3, fault summary bits |
-| 0x301 `LCM_CURR_L` | LCM→HMI | 2 Hz | mA: honey_L, drl_L, amb_L, aux_L |
-| 0x302 `LCM_CURR_R` | LCM→HMI | 2 Hz | mA: honey_R, drl_R, amb_R, aux_R |
+| 0x301 `LCM_CURR` | LCM→HMI | 2 Hz | mA per pair: honeycomb, DRL, amber running, fan |
+| 0x302 `LCM_REAR` | LCM→HMI | 5 Hz | tail L/R, brake, reverse, turn L/R, high-beam request |
 | 0x303 `LCM_ENV` | LCM→HMI | 1 Hz | VBAT ×10 mV, VCTRL, T_housing_L/R, T_board |
 | 0x304 `LCM_FAULT` | LCM→HMI | on change + 1 Hz | code, channel, value, count |
 | 0x30F `LCM_SHUTDOWN` | LCM→HMI | event | reason |
 | 0x310 `HMI_SET` | HMI→LCM | on change | ch, brightness 0–100, seq# |
 | 0x311 `HMI_HEARTBEAT` | HMI→LCM | 2 Hz | uptime, UI state |
-| 0x313 `HMI_INTERIOR` | HMI→LCM | on change | interior_mode, dash_level, seq# (echoed in LCM_STATUS) |
+| 0x313 `HMI_DASH` | HMI→LCM | on change | dash_level, seq# (echoed in LCM_STATUS) |
 | 0x312 `HMI_SERVICE` | HMI→LCM | event | learn-loads, clear log, set limits (PIN-gated in UI) |
 
 The LCM echoes accepted setpoints in `LCM_STATUS`, and the HMI slider reflects the echo. That
@@ -153,12 +158,12 @@ confirms each change end to end. Every frame carries a rolling counter and check
 
 ## 5.9 HMI (touchscreen) screens
 
-1. **Main:** three sliders (Honeycomb, DRL, Amber running), each 0–100 %. Live L/R status chips;
-   low/high/turn indicators.
-1a. **Interior:** dome AUTO / ON / OFF buttons and a dash-brightness slider. A note on screen says
-   doors control the dome while the truck is off. A high-beam icon on the main screen replaces the
-   cluster indicator (D-6).
-2. **Diagnostics:** per-output current (L | R), housing temperatures, system voltage, relay/feed status.
+1. **Main** (sized for 320×480): three pair sliders (Honeycomb, DRL, Amber running), each 0–100 %;
+   low/high/turn icons; dash-brightness slider.
+1a. **Rear lights:** truck outline with tail L/R, brake, reverse and turn arrows lit from live status;
+   red banner if the tails are not on while the headlights are.
+2. **Diagnostics:** per-pair current ("one side out" when it drops about 50 %), housing temperatures,
+   system voltage, low/high feed status.
 3. **Faults:** active faults (red), logged faults (grey), clear-log (service).
 4. **Service (PIN):** learn loads, PWM frequency, temperature thresholds, firmware versions.
    Future option: panel-dimming level (if the digital-potentiometer emulation is fitted, doc 09 §2.3).

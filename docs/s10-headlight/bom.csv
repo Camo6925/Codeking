@@ -5,19 +5,19 @@ item,group,description,manufacturer,model,qty,unit_price_usd,extended_usd,source
 4,REQ-Amber,3in square LED pod yellow lens with amber backlight (main 1.1A turn / backlight 0.03A running),Diode Dynamics,SS3 Sport Yellow Fog or Flood w/ amber backlight (DD6126/DD6125 family - confirm variant),2,TBD,TBD,diodedynamics.com,https://images.diodedynamics.com/docs/install/universal/stage_series/Stage_Series_3in_Worklight_Pod_Info_Guide.pdf,VERIFIED electrical; price TBD
 5,REQ-Decorative,Honeycomb backlight strip Cool White 6000K 50cm,Diode Dynamics,FlexLight LED Strip (DD0192P listed - confirm SKU),2,39.96,79.92,diodedynamics.com,https://www.diodedynamics.com/products/flexlight-led-strip,VERIFIED 9-16V IP67 -40..85C; current MEASURE
 6,REQ-Decorative,DRL strip Cool White 6000K 50cm,Diode Dynamics,FlexLight LED Strip (DD0192P listed - confirm SKU),2,39.96,79.92,diodedynamics.com,https://www.diodedynamics.com/products/flexlight-led-strip,VERIFIED; current MEASURE
-7,REQ-HMI,4.3in ESP32-S3 touch display with CAN and 7-36V input,Waveshare,ESP32-S3-Touch-LCD-4.3B (SKU 27848),1,TBD,TBD,waveshare.com,https://docs.waveshare.com/ESP32-S3-Touch-LCD-4.3B,VERIFIED specs
-8,REQ-FRB,Independent sealed fuse/relay box IP66 (>=22 mini fuses + >=7 relays + room for TIM/diode board),Eaton Bussmann,Series 15300 RTMR - configuration TBD,1,TBD,TBD,TBD,https://www.mouser.com/datasheet/2/87/bus_cbt_ds_series_15300_rtmr-560241.pdf,VERIFIED family; config TBD (15305-1 20-fuse base $37 at connectorconcepts)
+7,REQ-Screen,3.5in ESP32-S3 touch display 320x480 (owner choice),Waveshare,ESP32-S3-Touch-LCD-3.5 (SKU 30733),1,35.99,35.99,amazon.com,https://docs.waveshare.com/ESP32-S3-Touch-LCD-3.5,VERIFIED specs; SECONDARY price; temp rating VERIFY
+8,REQ-FRB,Standalone sealed fuse/relay box IP66 (16 mini fuses + 6 relays + room for turn module/diode board),Eaton Bussmann,Series 15300 RTMR - configuration TBD,1,TBD,TBD,TBD,https://www.mouser.com/datasheet/2/87/bus_cbt_ds_series_15300_rtmr-560241.pdf,VERIFIED family; config TBD (15305-1 20-fuse base $37 at connectorconcepts)
 9,REQ-FRB,Main fuse terminal block on top-post battery stud,Blue Sea Systems,5191 MRBF Terminal Fuse Block,1,37.99,37.99,currentconnected.com,https://www.bluesea.com/products/5191/MRBF_Terminal_Fuse_Block_-_30_to_300A,VERIFIED; SECONDARY price
 10,REQ-FRB,Main fuse 30A MRBF (1 installed + 1 spare),Blue Sea Systems,MRBF 30A,2,TBD,TBD,TBD,https://www.bluesea.com/products/category/Marine_Rated_Battery_Fuses,
-11,REQ-FRB,ISO micro 280 relay 12V resistor-suppressed >=20A (K1-K5 K7 K8 + 1 spare),TBD (Bosch/Hella/TE),TBD,8,TBD,TBD,TBD,,
+11,REQ-FRB,ISO micro 280 relay 12V resistor-suppressed >=20A (K1-K5 + 1 spare),TBD (Bosch/Hella/TE),TBD,6,TBD,TBD,TBD,,
 12,REQ-FRB,Mini blade fuses assortment 1/2/3/5/10A,Littelfuse or Bussmann,ATM series,1 lot,TBD,TBD,TBD,,
-13,REQ-FRB,Coil diode-OR diodes 1A >=100V (D1-D3 D6 D7 D10 D11) on small diode board,TBD,S1x/1N400x class,7,TBD,TBD,,,
+13,REQ-FRB,Coil diode-OR diodes 1A >=100V (low-pair coil x3 + tail coil x2 + stalk feed x2),TBD,S1x/1N400x class,7,TBD,TBD,,,
 14,REQ-FRB,Emergency headlamp switch sealed guarded illuminated,TBD,TBD,1,TBD,TBD,,,
 15,REQ-TIM,Turn Interface Module smart switch dual 2-2.5A,Infineon,BTS7120-2EPA (PROFET+2),1,TBD,TBD,Digi-Key/Mouser,https://www.infineon.com/assets/row/public/documents/10/46/infineon-faq-profet2-12v-faqdocument-en.pdf,VERIFIED family rating
 16,REQ-TIM,Dual-channel automotive optocoupler (turn inputs),TBD (AEC-Q101 class),TBD,2,TBD,TBD,,,UNVERIFIED part
 17,REQ-TIM,5V LDO 40V-input automotive (TIM logic),TI,TPS7B69-Q1 class,1,TBD,TBD,,,UNVERIFIED this session
 18,REQ-TIM,TIM PCB + sealed housing (potted),Custom,TBD,2,TBD,TBD,,,1 installed + 1 spare
-19,REQ-LCM,Smart high-side switch dual (decorative U1-U4),Infineon,PROFET+2 BTS7200-2EPC / BTS7120-2EPA (per measured load),4,TBD,TBD,Digi-Key/Mouser,https://www.infineon.com/assets/row/public/documents/10/49/infineon-bts7008-2epa-datasheet-en.pdf,VERIFIED family
+19,REQ-LCM,Smart high-side switch dual (pair channels: honeycomb DRL amber fan),Infineon,BTS7120-2EPA (2-2.5A/ch; BTS7008-2EPA if measured pair current >2A),2,TBD,TBD,Digi-Key/Mouser,https://www.infineon.com/assets/row/public/documents/10/49/infineon-bts7008-2epa-datasheet-en.pdf,VERIFIED family
 20,REQ-LCM,Smart high-side switch (power latch U10),Infineon,BTS7200-2EPC class,1,TBD,TBD,,,VERIFY datasheet
 21,REQ-LCM,Ideal diode controller,Texas Instruments,LM74700-Q1,1,TBD,TBD,,https://www.ti.com/lit/ds/symlink/lm74700-q1.pdf,VERIFIED
 22,REQ-LCM,N-MOSFET for ideal diode (>=40V >=20A automotive),TBD,per LM74700-Q1 datasheet,1,TBD,TBD,,,
@@ -29,16 +29,16 @@ item,group,description,manufacturer,model,qty,unit_price_usd,extended_usd,source
 28,REQ-LCM,CAN transceiver,TI or NXP,TCAN1042-Q1 or TJA1051,1,TBD,TBD,,,UNVERIFIED this session
 29,REQ-LCM,MCU module,Espressif,ESP32-S3-WROOM-1-N8,1,TBD,TBD,,,VERIFY temperature grade
 30,REQ-LCM,Input TVS diodes,Littelfuse,SM8S series (clamp <=35V per LM74700-Q1 method),2,TBD,TBD,,,UNVERIFIED selection
-31,REQ-LCM,Photorelays AEC-Q101 >=60V (PR1-PR6 interior + dimmer ladder),TBD,TBD,6,TBD,TBD,,,UNVERIFIED part
+31,REQ-LCM,Photorelays AEC-Q101 >=60V (PR1-PR4 dash dimmer ladder),TBD,TBD,4,TBD,TBD,,,UNVERIFIED part
 32,REQ-LCM,Dimmer ladder resistors (values from doc 09 5.2),TBD,E24 0.5W,5,TBD,TBD,,,
 33,REQ-LCM,LCM PCB + enclosure IP54+,Custom,JLCPCB/PCBWay + enclosure,1,TBD,TBD,,,Design pending
 34,REQ-Connectors,DT 12-way pairs: headlamp end x2 + FRB end x2 + T1 T2 T3,TE Deutsch,DT04-12P*/DT06-12S* + wedgelocks,7,TBD,TBD,,,VERIFY ratings
 35,REQ-Connectors,DT 4-way pairs: J-TURN + J-HMI,TE Deutsch,DT04-4P/DT06-4S,2,TBD,TBD,,,
-36,REQ-Connectors,DT 6-way pair: J-INT,TE Deutsch,DT04-6P/DT06-6S,1,TBD,TBD,,,
+36,REQ-Connectors,DT 4-way pair: J-INT,TE Deutsch,DT04-4P/DT06-4S,1,TBD,TBD,,,
 37,REQ-Connectors,DT06-3S (mates SS3 integrated connector inside headlamp),TE Deutsch,DT06-3S + W3S,2,TBD,TBD,,,
 38,REQ-Connectors,DT size-16 contacts + cavity plugs,TE Deutsch,per gauge,1 lot,TBD,TBD,,,
 39,REQ-Connectors,Factory-interface pigtails: headlamp-switch mate + column-switch mate,TBD,TBD (identify GM/Delphi housings),1 lot,TBD,TBD,,,UNVERIFIED housing P/N
-40,REQ-Vehicle,Add-a-circuit fuse taps (LT TURN + RT TURN underhood + IP fuse 11),TBD,match fuse type,3,TBD,TBD,,,check fuse type
+40,REQ-Vehicle,Add-a-circuit fuse taps 1A (LT TURN + RT TURN + LR PRK + RR PRK + STOPLP + B/U LP underhood; IP fuse 11),TBD,match fuse type,7,TBD,TBD,,,check fuse type
 41,REQ-Vehicle,Load-independent electronic turn/hazard flasher for 2001 S10,TBD,TBD (O-7),1,TBD,TBD,,,OPEN
 42,REQ-Wire,TXL wire 10/14/16/18/20 AWG,TBD,SAE J1128 TXL,1 lot,TBD,TBD,,,
 43,REQ-Wire,Loom + adhesive heat shrink + firewall grommet,TBD,TBD,1 lot,TBD,TBD,,,
@@ -47,5 +47,6 @@ item,group,description,manufacturer,model,qty,unit_price_usd,extended_usd,source
 46,OPT,Projector current sensing (shunt + INA180-Q1) x4,Texas Instruments,INA180-Q1,4,TBD,TBD,,,Phase 2
 47,OPT,Housing fans on AUX channels,TBD,TBD,2,TBD,TBD,,,Only if thermal test requires
 48,OPT,Compact projector alternative,HELLA,Module 60 LED family,4,TBD,TBD,,,Only if housing fit fails
-49,OPT,I2C GPIO expander automotive,TI,TCA9535-Q1 class,1,TBD,TBD,,,UNVERIFIED
+49,REQ-Screen,CAN transceiver breakout for 3.5in screen (3.3V I/O),TI,TCAN1042-Q1 class,1,TBD,TBD,,,UNVERIFIED part
 50,TOOL,Deutsch solid contact crimp tool,TE Deutsch,HDT-48-00,1,TBD,TBD,,,
+51,REQ-Connectors,DT 6-way pair: J-REAR (rear-light sense),TE Deutsch,DT04-6P/DT06-6S,1,TBD,TBD,,,

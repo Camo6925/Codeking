@@ -1,133 +1,140 @@
-# Deliverable 1 – System Architecture (Rev D)
+# Deliverable 1 – System Architecture (Rev E)
 
-Rev D owner decisions (see [README](README.md)):
+Rev E owner decisions (see [README](README.md)):
 
-* **D-9:** off-road truck. Road-lighting regulations (FMVSS 108 / SAE photometry) are not design
-  constraints.
-* **D-10:** no side markers.
-* **D-11:** amber corner = **square pod** matching the other lights: Diode Dynamics SS3 (amber, with
-  amber backlight).
-* **D-12:** the lighting system has its **own independent fuse box**, as in the original power
-  architecture. All lighting power, including the amber turn lamps, comes from that box. Factory circuits
-  provide **signals only**.
+* **D-13:** every lamp pair is grouped: **one control signal and one fuse per pair**, split to left and
+  right after the fuse. Only the turn signals are per side.
+* **D-14:** the system is wired and documented as a chain: **3.5" control screen → control portion →
+  standalone fuse box → one connector per headlight.**
+* **D-15:** 3.5" control screen (Waveshare ESP32-S3-Touch-LCD-3.5).
+* **D-16:** the system makes sure the **rear lights** work with the headlights, and the screen shows
+  their status.
+* **D-17:** the **interior light works by the doors**, as factory.
 
-## 1.1 Design principles
+Still in force: off-road use (D-9), no side markers (D-10), SS3 square amber pod (D-11), independent
+fuse box (D-12), factory headlamp switch removed (D-1), lows on with the ignition (D-2).
 
-1. **Power architecture (from the original requirement):**
-   ```
-   BATTERY → MAIN FUSE → INDEPENDENT FUSE/RELAY BOX → INDEPENDENT FUSED BRANCHES → LAMPS / CONTROLLER
-   ```
-   No lamp is powered from a factory fuse or factory lighting circuit. The factory truck supplies four
-   things, all signals:
-   * the ignition-RUN enable (one relay coil),
-   * the dimmer-stalk high-beam contact,
-   * the front turn/hazard signals (optically isolated, high-impedance),
-   * the old headlamp-switch signal lines (park request, interior, dash dimmer).
-2. **Criticality partitioning.**
-
-   | Tier | Functions | Implemented with | On controller failure |
-   |---|---|---|---|
-   | **T1 – Essential** | Low beam, high beam, front turn/hazard, rear park/tail request | Relays and the Turn Interface Module (opto + smart switch) in the fuse box. **No microcontroller** | Unaffected |
-   | **T2 – Decorative** | Honeycomb (CH1), DRL strip (CH2), amber running backlight (CH3) | Lighting Control Module (PROFET + ESP32-S3) | **OFF** |
-   | **T3 – Interface** | Touchscreen, settings, diagnostics | HMI (ESP32-S3 4.3") | No lighting effect |
-   | **T3-I – Interior** | Dome AUTO/ON/OFF, dash brightness | LCM photorelays on the old switch lines | Factory door behaviour, default dash level |
-3. **Hardware owns safety; software owns comfort.**
-4. **Passive headlamps.** Lamps, an NTC sensor and wiring to **one** sealed 12-way plug. No fuses or
-   electronics on the lights.
-5. **Serviceable and non-destructive:** plug-in fuses and relays, DT connectors, factory connectors
-   reached through mating pigtails or fuse taps.
-
-## 1.2 Physical architecture
+## 1.1 The chain (how to read and wire the system)
 
 ```
- ENGINE BAY                                                             CAB
- ┌────────────────────────────────────────────────────────┐            ┌─────────────────────────────────┐
- │ BATTERY + top post ─ Blue Sea 5191 + 30 A MRBF          │            │ LCM (Lighting Control Module)   │
- │      │ 10 AWG                                           │  T1 power/ │  ESP32-S3, 8 PROFET channels,  │
- │      ▼                                                  │  outputs   │  10 s latch, watchdog,          │
- │ ┌───────────────── FRB: INDEPENDENT FUSE/RELAY BOX ───┐ │◄══════════►│  interior photorelays           │
- │ │ sealed IP66 (Eaton RTMR family)                     │ │  T2 sense  │                                 │
- │ │ F1–F20 branch fuses · K1–K5, K7, K8 relays          │ │◄══════════►│  J-INT ─ old headlamp-switch    │
- │ │ Turn Interface Module (TIM): 2 opto inputs +        │ │  T3 cab    │          pigtail (interior/dash)│
- │ │   dual PROFET, always-hot, no MCU                   │ │◄══════════►│  J-HMI ─ touchscreen            │
- │ │ ground stud ◄── 10 AWG ── BATTERY −                 │ │  interface │ cab side of T3: IGN tap (IP     │
- │ └──┬───────────────────────┬──────────────────────────┘ │            │  fuse 11), stalk, K7 park       │
- │    │ one 12-way plug        │ one 12-way plug           │            │  signal, emergency switch S1    │
- │    ▼                        ▼                           │            └─────────────────────────────────┘
- │ LEFT HEADLAMP (passive)   RIGHT HEADLAMP (passive)      │
- │ factory LT/RT TURN fuse taps ─ signal only ─► FRB TIM   │
- └────────────────────────────────────────────────────────┘
+ ┌──────────────────┐   CAN + 5 V    ┌──────────────────────┐  3 pair outputs ┌───────────────────────────┐
+ │ 3.5" CONTROL     │ ─────────────► │ CONTROL MODULE       │ ──────────────► │ STANDALONE FUSE BOX       │
+ │ SCREEN (dash)    │                │ (behind dash)        │  (honeycomb,    │ (under hood, at battery)  │
+ │ brightness,      │ ◄───────────── │ 3 PWM pair channels  │   DRL, amber    │ one fuse per pair         │
+ │ status, rear-    │  status/faults │ settings memory      │   run)          │ relays: low pair, high    │
+ │ light status,    │                │ 10 s hardware latch  │                 │ pair, ign, decorative     │
+ │ dash brightness  │                │ watchdog             │ ◄────────────── │ supply, tail lamps        │
+ └──────────────────┘                └──────────────────────┘  power feed +   │ Turn Interface Module     │
+                                                               sense lines    └──────┬─────────────┬──────┘
+                                                                                     │ split L / R │
+                                                                                     ▼             ▼
+                                                                         LEFT HEADLIGHT       RIGHT HEADLIGHT
+                                                                         one 12-way plug      one 12-way plug
+                                                                         low · high ·         low · high ·
+                                                                         honeycomb · DRL ·    honeycomb · DRL ·
+                                                                         SS3 amber pod        SS3 amber pod
 ```
 
-* **FRB (Fuse/Relay Box):** under the hood near the battery, standalone. Every lamp branch is fused here.
-* **LCM:** in the cab (benign temperatures for the ESP32-S3 and the touchscreen link). It switches the
-  decorative channels. Their outputs return to the FRB through the T1 trunk and pass through their own
-  branch fuses before going to the headlamps, so **all** headlamp branches are fused in one box.
-* **Each headlamp:** one harness, one plug at the lamp, one plug at the FRB.
+**Power source (one sentence):** battery → 30 A main fuse on the post → standalone fuse box. The fuse
+box powers every lamp and also sends one fused feed back to the control module so it can drive the
+three pair outputs.
 
-## 1.3 Power flow
+## 1.2 Per-headlight content and control grouping
 
-```
-BATTERY (+) ─ 30 A MRBF (Blue Sea 5191 on post) ─ 10 AWG ─ FRB VBUS
-FRB:
-  F1  5 A ─ K2 ─► LEFT  pin 1  low beam          F11 3 A ◄─ LCM HONEY_L   ─► LEFT  pin 4
-  F2  5 A ─ K3 ─► RIGHT pin 1  low beam          F12 3 A ◄─ LCM HONEY_R   ─► RIGHT pin 4
-  F3  5 A ─ K4 ─► LEFT  pin 2  high beam         F13 3 A ◄─ LCM DRL_L     ─► LEFT  pin 5
-  F4  5 A ─ K5 ─► RIGHT pin 2  high beam         F14 3 A ◄─ LCM DRL_R     ─► RIGHT pin 5
-  F5 10 A ─ K8 ─► T1 VDECO → LCM PROFETs         F15 2 A ◄─ LCM AMB_RUN_L ─► LEFT  pin 6 (SS3 backlight)
-  F6  3 A ─────► T1 CTRL_BATT → LCM latch        F16 2 A ◄─ LCM AMB_RUN_R ─► RIGHT pin 6
-  F7  5 A ─ K1 ─► IGN_SW bus (coils, sense)      F17 3 A ◄─ TIM TURN_L     ─► LEFT  pin 7 (SS3 main)
-  F8  5 A ─────► T3 → emergency switch S1        F18 3 A ◄─ TIM TURN_R     ─► RIGHT pin 7
-  F9  2 A ◄ IGN_SW/EMER ► T3 → stalk common      F19 3 A ◄─ LCM AUX_L      ─► LEFT  pin 12 (fan, opt.)
-  F10 5 A ─────► TIM supply (ALWAYS HOT: hazards work key-off)    F20 3 A ◄─ LCM AUX_R ─► RIGHT pin 12
-BATTERY (−) ─ 10 AWG ─ FRB ground stud ─┬─ PRJ_RTN_L/R (16 AWG, pin 3) ─┬─ DECO_RTN_L/R (14 AWG, pin 9)
-                                        ├─ T1 PGND / LGND → LCM         └─ coil returns, TIM ground
-```
+| Function | Lamp in each headlight | Control signal | Fuse | Switched by |
+|---|---|---|---|---|
+| Low beam | HELLA L4060 low | **Pair**: ignition RUN | 1 for both | Relay K2 (both sides) |
+| High beam | HELLA L4060 high | **Pair**: stalk HIGH / flash-to-pass | 1 for both | Relay K3 (both sides) |
+| Honeycomb | FlexLight behind honeycomb | **Pair**: PWM CH1 | 1 for both | Control module, one channel |
+| DRL strip | FlexLight | **Pair**: PWM CH2 | 1 for both | Control module, one channel |
+| Amber running | SS3 backlight | **Pair**: PWM CH3 | 1 for both | Control module, one channel |
+| Amber turn | SS3 main beam | **Per side**: factory turn signal L / R | 1 per side | Turn Interface Module |
 
-## 1.4 Hardware logic (no MCU)
+Left and right brightness are identical by construction: each pair is one wire, one fuse, one
+switch, split in the fuse box.
 
-| Device | Driven by | Effect |
+**Trade-off of pairing:** one fuse or relay failure darkens that function on both sides. That includes
+both low beams through K2/F1. Mitigation: plug-in relay and fuses, carry spares, and the HMI names the
+failed pair.
+
+## 1.3 Criticality
+
+| Tier | Functions | Hardware | Controller/screen failure |
+|---|---|---|---|
+| T1 Essential | Low pair, high pair, turn/hazard, tail lamps | Relays + Turn Interface Module, **no microcontroller** | Unaffected |
+| T2 Decorative | Honeycomb, DRL, amber running | Control module PWM | Off |
+| T3 Screen | Settings, status, rear-light display, dash brightness | 3.5" screen | Lighting unaffected (control module keeps saved levels) |
+
+## 1.4 Fuse box (16 positions: the owner's original idea now fits)
+
+| Fuse | Circuit | Rating (P) |
 |---|---|---|
-| K1 K-IGN | Factory IGN RUN (IP fuse 11 tap, F0 1 A) | Creates IGN_SW |
-| K2/K3 low beam | IGN_SW · HI_REQ · EMER (diode-OR) | Lows on with ignition; stay on during high beam |
-| K4/K5 high beam | HI_REQ (stalk HIGH / flash-to-pass) | Highs |
-| K7 park signal | IGN_SW · EMER | Dry contact replaces the old switch's park signal → factory rear tail/license lamps |
-| K8 decorative power | IGN_SW | VDECO to the LCM |
-| **TIM** | Factory LT/RT TURN signal → optocoupler → PROFET IN | SS3 main beam flashes at full brightness, powered from F10 (always hot). Hazards work with the key off. |
+| F1 | Low beam pair (via K2) | 7.5 A |
+| F2 | High beam pair (via K3) | 7.5 A |
+| F3 | Honeycomb pair (from control CH1) | 3 A |
+| F4 | DRL pair (from control CH2) | 3 A |
+| F5 | Amber running pair (from control CH3) | 1 A |
+| F6 | Turn left (Turn Interface Module) | 3 A |
+| F7 | Turn right (Turn Interface Module) | 3 A |
+| F8 | Turn Interface Module supply (always hot) | 5 A |
+| F9 | Control module decorative supply (via K4) | 7.5 A |
+| F10 | Control module logic / latch (always hot) | 3 A |
+| F11 | Ignition bus (via K1) | 5 A |
+| F12 | Emergency headlamp switch | 5 A |
+| F13 | Stalk feed | 2 A |
+| F14 | Fan pair (optional, from control AUX) | 3 A |
+| F15–F16 | Spare | — |
 
-**Turn override:** the SS3 gives its main beam priority over its backlight internally (manufacturer
-statement). While a side flashes, the LCM also holds that side's backlight off for the whole signaling
-period (`ALLOW_L/R` gate) so the flash is clean. If the LCM is dead, the backlight is off anyway and
-the turn signals still work.
+Relays: **K1** ignition, **K2** low pair, **K3** high pair, **K4** decorative supply, **K5** tail
+lamps (park request), plus 1 spare.
 
-## 1.5 Ignition behavior
+## 1.5 Rear lights (D-16)
 
-| Event | Hardware | Firmware |
+| Rear function | Who switches it | How the system ensures it |
 |---|---|---|
-| Ignition → RUN | K1 → IGN_SW → lows on, K7 rear park request, K8 VDECO. LCM latch on. | Boot → load settings → 1 s blank → 500 ms ramp of CH1–CH3 |
-| Cranking | Per IGN circuit (fuse 11 checked hot in CRANK) | VBAT < 9 V > 200 ms → decorative suspended; resume > 10.5 V |
-| Ignition → OFF | All relays drop → lamps off immediately; IGN_OK gates PROFETs off; TIM still follows hazards | ISR → duty 0 → save NVS → `LCM_SHUTDOWN` |
-| +10 s (8–12 s) | Hardware latch releases; LCM and HMI off | — |
-| Key-off drain | Latch PROFET + TIM PROFET sleep (µA class) + opto leakage. Target < 100 µA **[MEASURE]** | — |
+| Tail / rear marker / license | Factory park relay on factory fuses | **K5** (hardware, ignition) commands it whenever the headlights are on. Screen shows L/R tail status (sense on factory `LR PRK` / `RR PRK` fuses) and flags "TAIL LIGHTS NOT ON" |
+| Brake | Factory | Screen shows brake status (sense on factory `STOPLP` fuse) |
+| Reverse | Factory | Screen shows reverse status (sense on factory `B/U LP` fuse) |
+| Rear turn / hazard | Factory flasher | Same signal the front turn module uses. Screen shows the arrows |
 
-## 1.6 Factory headlamp switch removed
+All rear sensing is high-impedance and read-only (≈0.24 mA per input via 1 A fuse taps). The screen
+can't switch rear lights off; the tails follow the headlights by hardware.
 
-See [09-factory-switch-integration.md](09-factory-switch-integration.md). Lows follow the ignition, the
-stalk's dimmer contact is the high-beam request, K7 replaces the park signal, and the LCM photorelays
-replace the dome-ON, interior-defeat and dimmer contacts (touchscreen controlled). Factory DRL/automatic
-headlamps are disabled by removing fuses.
+## 1.6 Hardware logic (no microcontroller)
 
-## 1.7 Fail-safe matrix
+| Relay / module | Driven by | Effect |
+|---|---|---|
+| K1 | Factory ignition RUN (IP fuse 11 tap) | Ignition bus |
+| K2 low pair | Ignition bus · HI request · emergency (diode-OR) | Lows on with ignition, stay on in high beam |
+| K3 high pair | Stalk HIGH / flash-to-pass | Highs |
+| K4 | Ignition bus | Decorative supply to the control module |
+| K5 | Ignition bus · emergency | Tail lamps via factory park relay |
+| Turn Interface Module | Factory turn signal → optocoupler | SS3 main beam per side, always-hot supply (hazards work key-off) |
 
-| Fault | Low | High | Turn/hazard | Rear park | Decorative (CH1–CH3) | Interior/dash |
-|---|---|---|---|---|---|---|
-| HMI dead / CAN lost | ✔ | ✔ | ✔ | ✔ | ✔ saved levels | ✔ last setting |
-| LCM crash or unpowered | ✔ | ✔ | ✔ | ✔ | OFF | Factory default |
-| K1 / IGN tap failed | S1 emergency | ✔ via S1 | ✔ | ✔ via S1 | OFF | Factory default |
-| One projector relay | Other side lit | ✔ | ✔ | ✔ | ✔ | ✔ |
-| TIM failed | ✔ | ✔ | ✘ front (rear still factory) | ✔ | ✔ | ✔ |
-| Main fuse open | ✘ | ✘ | ✘ front | ✔ (factory) | ✘ | ✔ |
+The SS3 gives its main beam priority over the backlight internally, so a turn flash always overrides
+the amber running light without a separate per-pod signal.
 
-The TIM is a small, single-purpose, MCU-free board with fixed logic (two optocouplers and one dual
-smart switch). It is separate from the LCM so a controller fault can never touch the turn signals.
-Carry a spare.
+## 1.7 Ignition behaviour
+
+* **ON:** lows, tail lamps and decorative supply energize immediately (relays). The control module
+  boots, restores saved pair levels, and ramps in 500 ms.
+* **OFF:** relays drop and every lamp goes off at once. Hazards still work. The control module saves
+  and holds for 10 s on its hardware latch, then powers off with the screen.
+* **Key-off drain:** target < 100 µA **[MEASURE]**.
+
+## 1.8 Interior and dash (D-17)
+
+* **Interior/dome light:** factory door operation through the BCM. The old switch's dome-ON and
+  interior-defeat wires are simply insulated. Nothing in this system touches the dome circuit.
+* **Dash brightness:** set on the screen. The control module switches a resistor ladder on the old
+  switch's dimmer wire.
+
+## 1.9 Fail-safe summary
+
+| Fault | Lows | Highs | Turn/hazard | Tails | Decorative |
+|---|---|---|---|---|---|
+| Screen dead | ✔ | ✔ | ✔ | ✔ | ✔ saved levels |
+| Control module dead | ✔ | ✔ | ✔ | ✔ | off |
+| K1 / ignition tap | emergency switch | ✔ (via emergency) | ✔ | ✔ (via emergency) | off |
+| K2 or F1 | **both lows off**: swap relay/fuse | ✔ | ✔ | ✔ | ✔ |
+| Turn module | ✔ | ✔ | front ✘ (rear factory ✔) | ✔ | ✔ |

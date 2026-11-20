@@ -50,7 +50,7 @@ dedicated-low/dedicated-high requirement, and none found publishes a full electr
 
 ## 2. Touchscreen HMI (critical decision #2)
 
-### Selected: Waveshare ESP32-S3-Touch-LCD-4.3B (SKU 27848; boxed version SKU 28141)
+### Superseded in Rev E by the 3.5" board (§2a): Waveshare ESP32-S3-Touch-LCD-4.3B (SKU 27848)
 
 | Attribute | Value | Status |
 |---|---|---|
@@ -79,6 +79,22 @@ talk to the LCM over a robust automotive bus instead of fragile GPIO wiring, and
   critical path.
 
 ---
+
+## 2a. Rev E screen: Waveshare ESP32-S3-Touch-LCD-3.5 (owner choice, D-15)
+
+| Attribute | Value | Status |
+|---|---|---|
+| SKU | 30733 (ESP32-S3-Touch-LCD-3.5); 30934 (-C variant) | [VERIFIED] Waveshare docs |
+| MCU | ESP32-S3R8, 8 MB PSRAM, 16 MB flash | [VERIFIED] |
+| Display / touch | 3.5" IPS 320×480, ST7796 (SPI); FT6336 capacitive (I²C) | [VERIFIED] |
+| Power | USB-C 5 V; AXP2101 PMIC; 3.7 V Li-ion header | [VERIFIED] |
+| I/O | 2.54 mm header with I²C, UART, USB and GPIOs | [VERIFIED] |
+| CAN | **None on board.** Add a CAN transceiver (TCAN1042-Q1 class) on header GPIOs; the ESP32-S3 has a built-in TWAI controller | [VERIFIED] absence |
+| Operating temperature | Not stated on the page | **[VERIFY]** |
+| Price | $35.99 (Amazon listing) | [SECONDARY] |
+
+Do not fit a lithium cell in a vehicle dash; leave the battery header empty. Power comes from the
+control module's protected 5 V.
 
 ## 3. Smart high-side switches for decorative outputs (critical decision #3)
 
