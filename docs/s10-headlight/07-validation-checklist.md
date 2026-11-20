@@ -1,4 +1,4 @@
-# Deliverable 7 – Validation & Safety Checklist (Rev C)
+# Deliverable 7 – Validation & Safety Checklist (Rev D)
 
 Record every result (value, date, initials). Any **FAIL** in a ★ item blocks road use.
 
@@ -72,29 +72,27 @@ current probe, thermocouple meter, IR thermometer, stopwatch, water spray bottle
 - [ ] With the LCM unplugged: turn and hazard still fully functional.
 - [ ] Running amber on, no turn: rear turn bulb and dash arrow **dark** (no back-feed).
 
-## 7.7a Required lamps and switch-removal replacement functions ★ (Rev B)
+## 7.7a Switch-removal functions, turn module and interior ★
 
-- [ ] Ignition RUN: rear tail, rear markers and license plate on (K7 emulation); front side markers on.
-- [ ] Ignition OFF: all of the above off immediately; the factory park relay does not stay latched.
-- [ ] Touchscreen high-beam icon follows stalk HIGH and flash-to-pass (no cluster indicator, D-6).
-- [ ] Touchscreen interior AUTO: dome follows doors. ON: dome on, doors closed. OFF: dome stays off with
-      a door open.
-- [ ] Touchscreen dash slider: every step changes panel brightness; no step blanks the panel.
-- [ ] Ignition OFF (LCM asleep): dome follows doors; dash returns to the default level next time.
+- [ ] Ignition RUN: rear tail and license lamps on (K7). Ignition OFF: off immediately.
+- [ ] Hazards with the **key off**: both SS3 main beams flash (TIM on always-hot F10).
+- [ ] Turn L/R with ignition on: that side's SS3 main flashes at full; its backlight stays off for the
+      whole signaling period; the other side's backlight unchanged.
+- [ ] Unplug T1/T2 (LCM off): turn and hazards still work.
+- [ ] Factory turn circuit load: ≈1 mA per side (meter in series). Flash rate normal with the electronic flasher.
+- [ ] Touchscreen high-beam icon follows stalk HIGH and flash-to-pass (D-6).
+- [ ] Touchscreen interior AUTO / ON / OFF and the dash slider work. Key off: dome follows doors.
 - [ ] Pull F6 with the ignition on: interior reverts to AUTO, dash to the default level.
-- [ ] **Amber fail-ON:** with the ignition on, (a) unplug the LCM power (pull F6), (b) halt the MCU,
-      (c) pull F5. In each case both amber parking lamps go to **full** within 1 s.
-- [ ] Amber slider cannot go below the floor; at the floor the lamp still meets J222 minimum (photometric
-      check or comparison against a certified reference lamp).
 - [ ] With the DRL fuse and factory headlamp relay removed, no factory module turns anything on in
-      darkness (cover the ambient sensor with the ignition on).
+      darkness (cover the ambient sensor).
+- [ ] Key-off current of the whole lighting system after the 10 s timeout: < 100 µA (record).
 
 ## 7.8 Low/high beam function & thermal ★
 
-- [ ] Stalk LOW → lows only; stalk HIGH → **lows + highs**; flash-to-pass works; high-beam indicator works.
+- [ ] Stalk LOW → lows only; stalk HIGH → **lows + highs**; flash-to-pass works.
 - [ ] Stalk LOW with engine running in daylight → highs **off** (confirms factory DRL disabled).
 - [ ] Emergency switch S1 with K1 removed → lows on; highs via stalk.
-- [ ] With K1 removed: S1 gives lows, markers, rear park and amber; stalk HIGH gives highs (stalk fed via S1).
+- [ ] With K1 removed: S1 gives lows and rear park; stalk HIGH gives highs (stalk fed via S1).
 - [ ] Remove one low-beam relay → other side stays lit; HMI shows a feed fault for the dark side.
 - [ ] Thermal soak: closed housing, lows + highs + all decorative at 100 %, engine idling, hood
       closed, 30 min (and ideally 60 min in hot ambient). Record NTC and thermocouple readings. Must stay
@@ -117,28 +115,16 @@ current probe, thermocouple meter, IR thermometer, stopwatch, water spray bottle
 - [ ] Remove F5 (VDECO): decorative off and faulted; projectors unaffected.
 - [ ] Remove F6 (CTRL): LCM and HMI off; projectors and turn signals unaffected.
 
-## 7.11 Road test & aiming ★
+## 7.11 Trail test & aiming ★
 
-- [ ] Aim each low beam using the SAE/DOT visual-aim method for the module (HELLA aiming instructions)
+- [ ] Aim each low beam per the HELLA aiming instructions
       on a level surface at the specified distance, with the truck at normal load and tyre pressure.
 - [ ] Aim each high beam per the HELLA instructions.
-- [ ] Night road test: cutoff sharp and level, no glare complaints, no flicker visible in mirrors or
+- [ ] Night test: cutoff sharp and level, no flicker visible in mirrors or
       on camera (PWM 250 Hz check), no EMI noise on the AM/FM radio.
 - [ ] 2-week monitoring: review the fault log for intermittent faults.
 
-## 7.12 Lighting compliance review (US)
+## 7.12 Use note
 
-| Item | Requirement / consideration | Status |
-|---|---|---|
-| Headlamps | FMVSS 108 requires headlamps to be certified by their manufacturer. Use **SAE/DOT-marked** HELLA modules. A home-built housing around certified modules is a modification. Check your state's equipment rules and inspection requirements. | Open |
-| Low + high together | Allowed. Obey the module maker's aiming and mounting instructions; mounting height is regulated (FMVSS 108 table). | **[MEASURE]** mounting height |
-| Turn signal | Front turn signals must meet SAE J588 and flash 60–120 fpm. The amber pod replaces the factory lamp (D-3), so it must be SAE marked. | Required |
-| Parking lamps | Required; on with headlamps. Dimmed amber must stay above the J222 minimum → `AMB_MIN_DUTY` floor; hardware fail-ON. | Required |
-| Front side markers | Required (amber, front, each side). Certified marker element fed by K6. | Required |
-| Side reflex reflectors | Front amber side reflectors are required; confirm the new corner lamp or a separate reflector provides them. | Open |
-| White DRL strip / honeycomb | Not certified DRLs. US FMVSS 108 regulates DRLs (intensity, deactivation near turn signals); a non-certified decorative white lamp may violate state law. Consider using the HELLA module's built-in certified DRL function as the legal DRL and treating strip/honeycomb as accent lighting. | Review |
-| Colour | Forward lamps white or amber only. | ✔ by design |
-| State law | Many states restrict additional forward lamps, colour, and lighting while moving. **Check your state vehicle code before road use.** | Open |
-
-This checklist is engineering guidance, not legal advice. Confirm compliance with your state's
-regulations.
+Off-road vehicle (D-9). Road-lighting regulations were not used as design constraints, and this
+assembly is not intended or certified for public-road use.

@@ -175,31 +175,28 @@ cover the whole system, and the size-16 contacts take the 14–20 AWG range used
 
 ---
 
-## 8. Selected lamps (Rev C, owner decision D-8)
+## 8. Selected lamps (Rev D)
 
-### 8.1 Amber corner pod: Truck-Lite 4050A
+Off-road vehicle (D-9): lamp certification is not a requirement. Truck-Lite 4050A and 10250Y (Rev C)
+are dropped: no side markers (D-10), and the amber corner must be a square pod (D-11).
+
+### 8.1 Amber corner: Diode Dynamics SS3 3" LED pod, yellow lens, amber backlight
 | Attribute | Value | Status |
 |---|---|---|
-| Description | Signal-Stat, LED, yellow round, 24 diode, Front/Park/Turn, 12 V, PL-3 | [VERIFIED] Truck-Lite product page |
-| Inputs | PL-3 three-wire (ground, park, turn): separate park and turn inputs | [VERIFIED] product title (PL-3) |
-| Current | Turn ("major") 0.38 A; park ("minor") 0.03 A | [SECONDARY] retailer spec |
-| Size | 4.31" round, about 0.57" deep (retailer) | [SECONDARY]; confirm with sample |
-| Mounting | Grommet mount (variants) | [SECONDARY] |
-| SAE | Retailer lists "I6". **I6 is the SAE J1395 front-turn class for vehicles ≥ 2032 mm wide.** The S10 is narrower; its front turn class is J588. A J1395 lamp exceeds J588 minimum intensity, but confirm acceptability with your state inspection and check the lamp markings on the sample. | Compliance check |
-| Price | TBD | — |
-| Why | Real certified dual-function lamp with separate park/turn wires and published currents. Park at 0.03 A means PWM dimming draws almost nothing. | |
+| Form | 3" square pod; overall about 3.3" × 3.8" (DD dimension drawing) | [VERIFIED] DD info guide |
+| Input voltage | 9–30 V | [VERIFIED] |
+| Main beam | Sport 14.5 W / **1.1 A @ 12.8 V**; Pro 36 W / 2.7 A; Max 38.5 W / 3 A | [VERIFIED] |
+| Backlight | 0.4 W / **0.03 A @ 12.8 V**, amber or red option | [VERIFIED] |
+| Priority | "The main beam takes priority, so if the main beam is on, the backlight will not trigger" | [SECONDARY] DD staff answer on product page |
+| Connector | Integrated Deutsch DT-type; pin 3 (blue) = backlight; pins 1/2 = main/ground | Pin 3 [VERIFIED]; pins 1/2 [VERIFY] |
+| Yellow SKUs (info guide table) | Driving DD6124 / DD6132, Flood DD6125 / DD6133, Fog DD6126 / DD6134, Spot DD6127 / DD6135 (pairs of columns in the guide; confirm Sport vs Pro and amber-backlight variant at order) | [VERIFIED] table; variant mapping [VERIFY] |
+| Recommended | **SS3 Sport, yellow, Fog or Flood pattern, amber backlight**: wide spread suits a turn indicator; Sport's 1.1 A is plenty | Choice |
+| Price | Not captured for Sport (SS3 White Pro pair listed at $399.95) | TBD |
+| Use | Backlight = amber running (CH3 PWM). Main beam = turn/hazard (TIM). Two inputs, with turn priority built into the pod | |
 
-Note for design: at 0.03 A the PROFET current sense can't reliably detect an open park element. The LCM
-therefore uses the amber node **voltage** sense to confirm the lamp is powered, and a bench "learn"
-reading as a coarse open check.
-
-### 8.2 Front side marker: Truck-Lite 10250Y
-| Attribute | Value | Status |
-|---|---|---|
-| Description | 10 Series, LED, yellow round, 2 diode, marker/clearance, **P2**, Fit 'N Forget M/C, 12 V | [VERIFIED] Truck-Lite product page |
-| Size | 2.54" (64.5 mm) round, 1.4" (35.6 mm) deep, grommet mount | [VERIFIED] |
-| Current | Not published | **[MEASURE]** (budgeted 0.5 A, actual expected far lower) |
-| Electronics | Sealed in epoxy | [VERIFIED] |
+If your other pods are a different brand or size, any square pod with a **separate backlight or
+accent wire** works the same way (e.g. Baja Designs Squadron family, which offers colour backlights;
+[UNVERIFIED] electrical data).
 
 ### 8.3 White DRL strip and honeycomb backlight: Diode Dynamics FlexLight, Cool White 6000K
 | Attribute | Value | Status |
@@ -228,9 +225,7 @@ amber pod:
    PWM edge). Bench test at 250 Hz, 5–100 % duty before accepting.
 3. Inrush current per PWM edge measured; must stay within the PROFET channel rating.
 4. Sealed (IP67 or better) or installed inside the sealed headlamp housing.
-5. Amber pod (Rev B, D-3: replaces the factory front lamps): **must be an SAE-certified dual-function
-   park/turn lamp with two separate inputs** (marked for J588 turn and J222 parking), plus a certified
-   amber front side marker (integrated or separate). Single-input pods are no longer acceptable.
-   Verify by measurement that the PARK and TURN inputs are isolated from each other.
-6. Amber park input must tolerate PWM at 250 Hz (bench test). The firmware floor `AMB_MIN_DUTY` is set
-   from a photometric check so the dimmed park lamp stays above the J222 minimum.
+5. Amber pod (Rev D): a square pod with **two inputs**: a low-power backlight/accent input (running,
+   PWM) and the main beam (turn, on/off at flasher rate). Verify by measurement that the two inputs
+   are isolated from each other.
+6. The backlight input must tolerate PWM at 250 Hz (bench test), or CH3 runs at a lower PWM frequency.

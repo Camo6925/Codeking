@@ -1,27 +1,22 @@
 #!/usr/bin/env python3
 """
-Wire / fuse / voltage-drop verification for the S10 standalone headlight system (Rev B).
+Wire / fuse / voltage-drop verification for the S10 standalone headlight system (Rev D).
 
-    python3 tools/wire_calc.py          # report
-    python3 tools/wire_calc.py --csv    # conductor table as CSV
+    python3 tools/wire_calc.py                                  # defaults (estimates)
+    python3 tools/wire_calc.py --main 0.6 --left 1.3 --right 2.3 --trunk 2.2   # as-built lengths
+    python3 tools/wire_calc.py --csv
 
-Rev B topology: every headlight is a single home-run harness with ONE 12-way connector at the lamp,
-running back to the Power Distribution & Control Center (PDCC) under the driver-side dash.
-Projector and decorative circuits each share one return conductor per headlight.
+Rev D topology
+  Battery (top post) -> 30 A MRBF on the post -> MAIN -> independent Fuse/Relay Box (FRB, under hood)
+  FRB -> one 12-way home-run harness per headlamp (all lamp power is fused in the FRB)
+  FRB <-> Lighting Control Module (LCM, in cab) via trunk T1: VDECO out to the LCM, 8 PWM outputs back
+  into FRB branch fuses, then to the headlamps. Decorative feed path = trunk + headlamp run.
+  Turn lamps: FRB F10 (always hot) -> Turn Interface Module (in FRB) -> headlamp pin 7.
 
-Method
-  * Design current = P_max / V_min (constant-power LED drivers draw more at low voltage),
-    or a measured/budget current.
-  * Copper resistance from AWG tables at 20 C, corrected to the conductor temperature
-    (alpha = 0.00393/C; default 85 C).
-  * Feed conductors: fuse = smallest standard rating >= max(1.25 x I, inrush allowance); the fuse
-    must not exceed the guideline maximum fuse for the gauge (the fuse protects the wire).
-  * Unfused return conductors: worst-case current must be <= 80 % of the gauge's guideline maximum.
-  * Voltage drop: each branch (feed + its return) <= 3 % of 13.5 V; battery-to-lamp total
-    (main feed + main ground + branch) <= 5 %.
-  * The per-gauge maximum-fuse table is a conservative engineering guideline for bundled TXL/GXL.
-    Confirm against the wire maker's derating data and connector contact ratings.
-Inputs tagged ESTIMATE must be replaced by datasheet or measured values before finalizing.
+Method: design current = P/V_min or measured/budget; Cu resistance at 85 C; feed fuse >= max(1.25 I,
+inrush) and <= guideline max fuse for the gauge; unfused returns <= 80 % of the guideline; branch
+(feed + return) <= 3 %, battery-to-lamp total <= 5 %. The per-gauge table is a conservative guideline
+for bundled TXL/GXL; confirm against the wire maker's derating data and contact ratings.
 """
 import argparse, csv, sys
 
@@ -29,109 +24,86 @@ OHM_PER_M_20C = {22: 0.05296, 20: 0.03331, 18: 0.02095, 16: 0.01317,
                  14: 0.008286, 12: 0.005211, 10: 0.003277, 8: 0.002061}
 MAX_FUSE_FOR_GAUGE = {22: 5, 20: 7.5, 18: 10, 16: 15, 14: 20, 12: 25, 10: 30, 8: 50}
 STD_FUSES = [1, 2, 3, 4, 5, 7.5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100]
-V_NOM = 13.5
-BRANCH_LIMIT, TOTAL_LIMIT = 0.03, 0.05
+V_NOM, BRANCH_LIMIT, TOTAL_LIMIT = 13.5, 0.03, 0.05
 
-# ---- lengths (one way, metres) — ESTIMATE until measured on the truck ----
-# Defaults are estimates; pass the as-built lengths with --main/--left/--right during the build.
-L_MAIN = 2.0        # battery -> FM -> firewall -> PDCC (driver-side dash)
-L_HL_L = 2.5        # PDCC -> left headlamp connector
-L_HL_R = 3.5        # PDCC -> right headlamp connector
-
-# ---- loads ----
-PRJ = 20.0 / 10.0   # HELLA L4060 "max 20 W" [SECONDARY] at 10 V design minimum = 2.0 A
-HONEY, DRL = 1.5, 1.5                     # Diode Dynamics FlexLight: current NOT published -> budget, MEASURE
-AMB_PARK, AMB_TURN = 0.03, 0.38           # Truck-Lite 4050A minor/major current [SECONDARY retailer data]
-MARKER, AUX = 0.5, 0.5                    # Truck-Lite 10250Y current not published -> budget; fan optional
-DECO_RTN = HONEY + DRL + AMB_PARK + AMB_TURN + MARKER + AUX
-COILS = 9 * 0.15                          # ESTIMATE, take from relay datasheet
-CTRL = 0.6                                # HMI 450 mA @5 V VERIFIED + LCM ESTIMATE
-VDECO = 2 * (HONEY + DRL + AMB_PARK + AUX)
-
-def build_conductors(L_MAIN, L_HL_L, L_HL_R):
-    return [c for c in _conductors(L_MAIN, L_HL_L, L_HL_R)]
-
-
-# conductor: name, awg, current, length, kind('feed'|'return'), inrush_min_fuse, note
-def _conductors(L_MAIN, L_HL_L, L_HL_R):
-  return [
-    ("MAIN+",        8,  None, L_MAIN, "feed",   0, "battery -> FM -> PDCC"),
-    ("MAIN-",        8,  None, L_MAIN, "return", 0, "PDCC ground stud -> battery -"),
-    ("LO_L",        16,  PRJ,  L_HL_L, "feed",   5, "inrush allowance ESTIMATE"),
-    ("HI_L",        16,  PRJ,  L_HL_L, "feed",   5, ""),
-    ("PRJ_RTN_L",   16,  2*PRJ, L_HL_L, "return", 0, "low+high shared return"),
-    ("LO_R",        16,  PRJ,  L_HL_R, "feed",   5, ""),
-    ("HI_R",        16,  PRJ,  L_HL_R, "feed",   5, ""),
-    ("PRJ_RTN_R",   16,  2*PRJ, L_HL_R, "return", 0, ""),
-    ("HONEY_L",     18,  HONEY, L_HL_L, "feed",  3, ""),
-    ("DRL_L",       18,  DRL,  L_HL_L, "feed",   3, ""),
-    ("AMB_PARK_L",  18,  AMB_PARK, L_HL_L, "feed", 3, ""),
-    ("MARKER_L",    18,  MARKER, L_HL_L, "feed", 2, ""),
-    ("AUX_L",       18,  AUX,  L_HL_L, "feed",   3, ""),
-    ("DECO_RTN_L",  14,  DECO_RTN, L_HL_L, "return", 0, "all decorative/amber/marker/aux returns"),
-    ("HONEY_R",     18,  HONEY, L_HL_R, "feed",  3, ""),
-    ("DRL_R",       18,  DRL,  L_HL_R, "feed",   3, ""),
-    ("AMB_PARK_R",  18,  AMB_PARK, L_HL_R, "feed", 3, ""),
-    ("MARKER_R",    18,  MARKER, L_HL_R, "feed", 2, ""),
-    ("AUX_R",       18,  AUX,  L_HL_R, "feed",   3, ""),
-    ("DECO_RTN_R",  14,  DECO_RTN, L_HL_R, "return", 0, ""),
-  ]
-# branch paths: (name, feed conductor, return conductor)
-PATHS = [("LO_R", "LO_R", "PRJ_RTN_R"), ("HI_R", "HI_R", "PRJ_RTN_R"),
-         ("LO_L", "LO_L", "PRJ_RTN_L"), ("HONEY_R", "HONEY_R", "DECO_RTN_R"),
-         ("DRL_R", "DRL_R", "DECO_RTN_R"), ("AMB_PARK_R", "AMB_PARK_R", "DECO_RTN_R"),
-         ("MARKER_R", "MARKER_R", "DECO_RTN_R")]
+PRJ = 20.0 / 10.0          # HELLA L4060 max 20 W [SECONDARY] at 10 V
+HONEY = DRL = 0.75         # FlexLight 50 cm: not published; ~5 W typical for 200 lm COB -> 2x margin budget. MEASURE
+AMB_RUN = 0.03             # Diode Dynamics SS3 backlight 0.03 A @12.8 V [VERIFIED, DD info guide]
+AMB_TURN = 1.1             # Diode Dynamics SS3 Sport main beam 1.1 A @12.8 V [VERIFIED]
+AUX = 0.5                  # optional housing fan, budget
+COILS = 7 * 0.15           # 7 relays, ESTIMATE
+CTRL = 0.6                 # HMI 450 mA @5 V [VERIFIED] + LCM ESTIMATE
+DECO_RTN = HONEY + DRL + AMB_RUN + AMB_TURN + AUX
+VDECO = 2 * (HONEY + DRL + AMB_RUN + AUX)
 
 
 def r(awg, t):
     return OHM_PER_M_20C[awg] * (1 + 0.00393 * (t - 20))
 
 
+def conductors(m, l, rr, tr):
+    main_i = 4 * PRJ + VDECO + CTRL + COILS + 2 * AMB_TURN
+    C = [("MAIN+", 10, main_i, m, "feed", 0), ("MAIN-", 10, main_i, m, "return", 0),
+         ("VDECO", 14, VDECO, tr, "feed", 0), ("LCM_PGND", 14, VDECO, tr, "return", 0)]
+    for side, L in (("L", l), ("R", rr)):
+        C += [(f"LO_{side}", 16, PRJ, L, "feed", 5), (f"HI_{side}", 16, PRJ, L, "feed", 5),
+              (f"PRJ_RTN_{side}", 16, 2 * PRJ, L, "return", 0),
+              (f"HONEY_T_{side}", 18, HONEY, tr, "trunk", 0), (f"HONEY_{side}", 18, HONEY, L, "feed", 3),
+              (f"DRL_T_{side}", 18, DRL, tr, "trunk", 0), (f"DRL_{side}", 18, DRL, L, "feed", 3),
+              (f"AMB_RUN_T_{side}", 18, AMB_RUN, tr, "trunk", 0), (f"AMB_RUN_{side}", 18, AMB_RUN, L, "feed", 2),
+              (f"TURN_{side}", 18, AMB_TURN, L, "feed", 3),
+              (f"DECO_RTN_{side}", 14, DECO_RTN, L, "return", 0)]
+    return main_i, C
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--temp", type=float, default=85.0)
+    ap.add_argument("--main", type=float, default=0.6, help="battery -> FRB, one way, m")
+    ap.add_argument("--left", type=float, default=1.3, help="FRB -> left headlamp, m")
+    ap.add_argument("--right", type=float, default=2.3, help="FRB -> right headlamp, m")
+    ap.add_argument("--trunk", type=float, default=2.2, help="FRB -> LCM (cab), m")
     ap.add_argument("--csv", action="store_true")
-    ap.add_argument("--main", type=float, default=L_MAIN, help="battery->PDCC one-way length, m")
-    ap.add_argument("--left", type=float, default=L_HL_L, help="PDCC->left headlamp one-way length, m")
-    ap.add_argument("--right", type=float, default=L_HL_R, help="PDCC->right headlamp one-way length, m")
     a = ap.parse_args()
-    CONDUCTORS = build_conductors(a.main, a.left, a.right)
-
-    main_i = 4 * PRJ + VDECO + CTRL + COILS + 2 * MARKER
+    main_i, C = conductors(a.main, a.left, a.right, a.trunk)
     rows, ok = {}, True
-    for name, awg, i, length, kind, inrush, note in CONDUCTORS:
-        i = main_i if i is None else i
+    for name, awg, i, length, kind, inrush in C:
         vd = i * r(awg, a.temp) * length
         if kind == "feed":
             fuse = next(f for f in STD_FUSES if f >= max(1.25 * i, inrush))
             good = fuse <= MAX_FUSE_FOR_GAUGE[awg]
+        elif kind == "trunk":       # LCM output -> FRB fuse; protected upstream by F5 (10 A) + PROFET
+            fuse, good = "F5", 10 <= MAX_FUSE_FOR_GAUGE[awg]
         else:
-            fuse = None
-            good = i <= 0.8 * MAX_FUSE_FOR_GAUGE[awg]
+            fuse, good = "-", i <= 0.8 * MAX_FUSE_FOR_GAUGE[awg]
         ok &= good
         rows[name] = dict(name=name, awg=awg, I_A=round(i, 2), len_m=length, vdrop_V=round(vd, 3),
-                          fuse_A=fuse if fuse else "-", wire_max_fuse_A=MAX_FUSE_FOR_GAUGE[awg],
-                          check="OK" if good else "UPSIZE", note=note)
+                          fuse=fuse, check="OK" if good else "UPSIZE")
     if a.csv:
         w = csv.DictWriter(sys.stdout, fieldnames=list(next(iter(rows.values()))))
         w.writeheader(); w.writerows(rows.values()); return
-
-    print(f"Conductor temp {a.temp:.0f} C. Lengths: main {a.main} m, left {a.left} m, right {a.right} m. "
-          f"PROVISIONAL until loads are measured\n")
-    print(f"{'Conductor':12} {'AWG':>3} {'I A':>6} {'L m':>4} {'Vd V':>6} {'Fuse':>5} {'Max':>4}  Check")
+    print(f"Rev D. {a.temp:.0f} C. main {a.main} m, left {a.left} m, right {a.right} m, trunk {a.trunk} m. PROVISIONAL\n")
+    print(f"{'Conductor':13} {'AWG':>3} {'I A':>6} {'L m':>4} {'Vd V':>6} {'Fuse':>5}  Check")
     for x in rows.values():
-        print(f"{x['name']:12} {x['awg']:3d} {x['I_A']:6.2f} {x['len_m']:4.1f} {x['vdrop_V']:6.3f} "
-              f"{str(x['fuse_A']):>5} {x['wire_max_fuse_A']:4}  {x['check']}  {x['note']}")
-    main_vd = rows["MAIN+"]["vdrop_V"] + rows["MAIN-"]["vdrop_V"]
-    print(f"\nMain feed current (all on, high beam, 10 V): {main_i:.1f} A -> FM "
-          f"{next(f for f in STD_FUSES if f >= 1.25 * main_i)} A min; main round-trip drop {main_vd:.3f} V")
-    print(f"\n{'Path':12} {'Branch V':>8} {'Branch %':>8} {'Total %':>8}  Check")
-    for name, fd, rt in PATHS:
-        b = rows[fd]["vdrop_V"] + rows[rt]["vdrop_V"]
-        tot = b + main_vd
+        print(f"{x['name']:13} {x['awg']:3d} {x['I_A']:6.2f} {x['len_m']:4.1f} {x['vdrop_V']:6.3f} {str(x['fuse']):>5}  {x['check']}")
+    mvd = rows["MAIN+"]["vdrop_V"] + rows["MAIN-"]["vdrop_V"]
+    dvd = rows["VDECO"]["vdrop_V"] + rows["LCM_PGND"]["vdrop_V"]
+    print(f"\nMain {main_i:.1f} A -> FM >= {next(f for f in STD_FUSES if f >= 1.25 * main_i)} A; "
+          f"main drop {mvd:.3f} V; VDECO/PGND trunk drop {dvd:.3f} V")
+    paths = []
+    for s in ("L", "R"):
+        for p in ("LO", "HI"):
+            paths.append((f"{p}_{s}", [f"{p}_{s}", f"PRJ_RTN_{s}"], 0))
+        for p in ("HONEY", "DRL", "AMB_RUN"):
+            paths.append((f"{p}_{s}", [f"{p}_T_{s}", f"{p}_{s}", f"DECO_RTN_{s}"], dvd))
+        paths.append((f"TURN_{s}", [f"TURN_{s}", f"DECO_RTN_{s}"], 0))
+    print(f"\n{'Path':10} {'Branch %':>8} {'Total %':>8}  Check")
+    for name, segs, extra in paths:
+        b = sum(rows[x]["vdrop_V"] for x in segs) + extra
+        tot = b + mvd
         good = b <= BRANCH_LIMIT * V_NOM and tot <= TOTAL_LIMIT * V_NOM
         ok &= good
-        print(f"{name:12} {b:8.3f} {100*b/V_NOM:8.2f} {100*tot/V_NOM:8.2f}  {'OK' if good else 'FAIL'}")
+        print(f"{name:10} {100*b/V_NOM:8.2f} {100*tot/V_NOM:8.2f}  {'OK' if good else 'FAIL'}")
     print("\nRESULT:", "all checks pass" if ok else "one or more checks FAIL — upsize flagged conductors")
     sys.exit(0 if ok else 1)
 

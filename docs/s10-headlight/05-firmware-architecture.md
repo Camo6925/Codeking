@@ -1,4 +1,4 @@
-# Deliverable 5 – Controller Firmware Architecture (Rev C)
+# Deliverable 5 – Controller Firmware Architecture (Rev D)
 
 Architecture only. Implementation starts after the schematic is captured and decorative loads are
 known.
@@ -9,11 +9,10 @@ known.
    power-down, short-circuit/overtemperature protection (PROFET) and wire protection (fuses) all work
    with the MCU halted. Firmware adds brightness control, diagnostics, derating and messages.
 2. **Firmware has no authority over the projectors or turn signals.** The LCM only *observes* them.
-3. **Fail OFF for decorative, fail ON for the required amber parking lamp.** Every PROFET output has a
-   hardware pull-down and is ANDed with `IGN_OK · WDOK`, so a crash, reset or brownout turns honeycomb
-   and DRL strip off. The amber parking lamp (CH3) is a legally required lamp (D-3). The firmware must
-   actively assert `MCU_OK` (gated with WDOK into `HEALTHY`) to keep the K9 bypass open. Losing
-   `HEALTHY` for any reason puts the amber park at full certified intensity in hardware.
+3. **Fail OFF.** Every PROFET output has a hardware pull-down and is ANDed with `IGN_OK · WDOK`. A
+   crash, reset or brownout turns all three channels (honeycomb, DRL strip, amber running backlight)
+   off. Turn signals are on the separate, MCU-free Turn Interface Module in the fuse box. The LCM only
+   observes them (isolated `TURN_x_SNS`).
 4. **Single source of truth.** The LCM owns the settings and stores them in its NVS. The HMI only
    displays them and requests changes, so losing the HMI never changes lighting behavior.
 
@@ -72,13 +71,9 @@ known.
   are electrically the same signal (split after the AND gate), so they are synchronized.
 * User brightness 0–100 % → perceptual curve `duty = (b/100)^2.2`. Duties above 0 and below
   `DUTY_MIN` (5 %, from PROFET t_ON/t_OFF ≈ 210 µs worst case) are raised to `DUTY_MIN`.
-* Amber running brightness floor (**mandatory**, D-3): `AMB_MIN_DUTY` is set from the photometric check
-  (D7 §7.12). CH3 runs between the floor and 100 % whenever the ignition is on; the UI cannot select
-  below the floor or OFF.
-* `MCU_OK` (→ `HEALTHY` → K9 open) is asserted only after INIT completes and only while: the CH3
-  channels show no OPEN/SHORT/OVERCURRENT fault, VDECO is present, and the supervised watchdog is being
-  served. On any amber fault, firmware drops `MCU_OK`, so K9 takes the parking lamp to full intensity and
-  the HMI shows "AMBER PARK ON BACKUP".
+* CH3 drives the SS3 **backlight** (0.03 A). Full 0–100 % range including OFF (off-road, D-9). Bench-check
+  that the backlight dims cleanly at 250 Hz. If it doesn't, lower `pwm_hz` for CH3 only (separate LEDC
+  timer) or use on/off.
 * Thermal derate: `derate = 1.0` below the warning temperature, falling linearly to 0.5 at the derate
   temperature, and 0 (off) at the cutoff temperature. Thresholds live in config and are set from the
   component ratings.
@@ -91,7 +86,6 @@ known.
 struct settings_v1 {
     uint16_t magic, version;
     uint8_t  bright_ch1, bright_ch2, bright_ch3;   // 0–100 %
-    uint8_t  amb_min_duty;                          // legal floor (service-only)
     uint16_t pwm_hz;                                // default 250
     uint16_t learned_ma[8];                         // per-output nominal current at 100 %
     uint8_t  interior_mode;                         // 0 AUTO, 1 ON, 2 OFF (defeat)
@@ -122,8 +116,7 @@ Current estimate per output: `I_on = V_IS_avg / R_SENSE × k_ILIS / duty`. The I
 | NTC FAULT | NTC open or short (ADC rail) | 2 s | Assume hot → derate 50 % | "LEFT TEMP SENSOR FAULT" |
 | UNDERVOLT | VBAT < 11.0 V (engine running) | 10 s | Warning | "LOW SYSTEM VOLTAGE 10.8 V" |
 | OVERVOLT | VBAT > 16.0 V | 1 s | Warning; > 18 V decorative off | "HIGH SYSTEM VOLTAGE" |
-| AMBER BACKUP | `HEALTHY` low but the amber node is powered (K9 active) | 1 s | Log; decorative continues if healthy otherwise | "AMBER PARK ON BACKUP" |
-| REQUIRED LAMP LOST | ignition on and the amber node or MKR_BUS sense is low | 500 ms | Log, red banner | "LEFT PARKING LAMP NOT POWERED – CHECK F11/F23/K9" |
+| TURN LAMP CHECK | `TURN_x_SNS` active but no amber turn current is seen (optional: TIM IS line to LCM spare ADC) | 3 flashes | Warning | "LEFT TURN LAMP – CHECK F17 / TIM" |
 | HMI LOST | no HMI heartbeat | 3 s | Log only; lighting unchanged | (HMI side: "CONTROLLER COMM LOST") |
 | WDT RESET | reset reason = watchdog | at boot | Log; increment counter; ≥ 3 in one cycle → decorative disabled for this cycle | "CONTROLLER RESET – DECORATIVE DISABLED" |
 
@@ -160,14 +153,14 @@ confirms each change end to end. Every frame carries a rolling counter and check
 
 ## 5.9 HMI (touchscreen) screens
 
-1. **Main:** three sliders (Honeycomb, DRL, Amber). The Amber slider's lower stop is the legal floor
-   and cannot reach OFF. Live L/R status chips; low/high/turn/park/marker indicators.
+1. **Main:** three sliders (Honeycomb, DRL, Amber running), each 0–100 %. Live L/R status chips;
+   low/high/turn indicators.
 1a. **Interior:** dome AUTO / ON / OFF buttons and a dash-brightness slider. A note on screen says
    doors control the dome while the truck is off. A high-beam icon on the main screen replaces the
    cluster indicator (D-6).
 2. **Diagnostics:** per-output current (L | R), housing temperatures, system voltage, relay/feed status.
 3. **Faults:** active faults (red), logged faults (grey), clear-log (service).
-4. **Service (PIN):** learn loads, PWM frequency, temperature thresholds, amber floor, firmware versions.
+4. **Service (PIN):** learn loads, PWM frequency, temperature thresholds, firmware versions.
    Future option: panel-dimming level (if the digital-potentiometer emulation is fitted, doc 09 §2.3).
 5. **Banner layer:** "CONTROLLER COMM LOST" / "DECORATIVE DISABLED" overlay. Headlamp status is still
    shown from what the HMI last received, with a "stale" marker.

@@ -1,51 +1,51 @@
 item,group,description,manufacturer,model,qty,unit_price_usd,extended_usd,source,link,verification
-1,REQ-Projector,90mm LED low beam module (SAE/DOT variant; low+DRL+position listed),HELLA,012488121 (confirm SAE variant; catalog family 1BL 012 488-xxx),2,298.57,597.14,partshubdirect.com,https://www.partshubdirect.com/products/hella-012488121-90mm-led-l4060-low-beam-headlights-with-daytime-running-and-position-light,SECONDARY price; family VERIFIED
-2,REQ-Projector,90mm LED high beam module,HELLA,011988031 (high/driving + DRL + position) or plain L4060 high beam,2,215.45,430.90,partshubdirect.com,https://www.partshubdirect.com/products/hella-011988031-90mm-l4060-led-high-beam-driving-lamp-module-with-daytime-running-and-position-light,SECONDARY; plain variant $335.28 at fiperformance.com
-3,REQ-Projector,90mm module mounting kit,HELLA,9XX 254 163-001 (per HELLA brochure note) - confirm fit for L4060,4,TBD,TBD,TBD,https://www.hella.com/australiansolutions/assets/documents_global/Hella-90mm-Module-Brochure-0224.pdf,UNVERIFIED applicability
-4,REQ-HMI,4.3in ESP32-S3 touch display with CAN and 7-36V input,Waveshare,ESP32-S3-Touch-LCD-4.3B (SKU 27848) or -BOX (SKU 28141),1,TBD,TBD,waveshare.com,https://docs.waveshare.com/ESP32-S3-Touch-LCD-4.3B,VERIFIED specs; price TBD
-5,REQ-Distribution,Sealed fuse & relay module IP66 (>=9 relay and >=16 fuse positions) - inside PDCC,Eaton Bussmann,Series 15300 RTMR - configuration TBD from datasheet,1,TBD,TBD,TBD,https://www.mouser.com/datasheet/2/87/bus_cbt_ds_series_15300_rtmr-560241.pdf,VERIFIED family; config TBD (15305-1 20-fuse base $37 at connectorconcepts)
-6,REQ-Distribution,Main fuse terminal block on top-post battery stud,Blue Sea Systems,5191 MRBF Terminal Fuse Block 30-300A,1,37.99,37.99,currentconnected.com,https://www.bluesea.com/products/5191/MRBF_Terminal_Fuse_Block_-_30_to_300A,VERIFIED specs; SECONDARY price
-7,REQ-Distribution,Main fuse 30A MRBF,Blue Sea Systems,MRBF 30A,2,TBD,TBD,TBD,https://www.bluesea.com/products/category/Marine_Rated_Battery_Fuses,1 installed + 1 spare
-8,REQ-Distribution,ISO micro 280 relay 12V resistor-suppressed >=20A,TBD (Bosch/Hella/TE),TBD,10,TBD,TBD,TBD,,9 installed (K1-K9) + 1 spare
-9,REQ-Distribution,Mini blade fuses assortment (1/3/5/10A),Littelfuse or Bussmann,ATM/MINI series,1,TBD,TBD,TBD,,
-10,REQ-Distribution,Coil diode-OR diodes 1A >=100V,TBD,S1x/1N400x class or RTMR plug-in diode module,11,TBD,TBD,TBD,,UNVERIFIED RTMR diode module availability
-11,REQ-Distribution,Emergency headlamp switch sealed guarded illuminated,TBD,TBD,1,TBD,TBD,TBD,,
-12,REQ-LCM,Smart high-side switch dual channel (decorative),Infineon,PROFET+2 BTS7200-2EPC / BTS7120-2EPA / BTS7008-2EPA (select per measured load),4,TBD,TBD,Digi-Key/Mouser,https://www.infineon.com/assets/row/public/documents/10/49/infineon-bts7008-2epa-datasheet-en.pdf,VERIFIED (BTS7008-2EPA datasheet); latch switch listed separately as item 13
-13,REQ-LCM,Smart high-side switch (power latch U10),Infineon,BTS7200-2EPC class,1,TBD,TBD,Digi-Key/Mouser,,VERIFY datasheet
-14,REQ-LCM,Ideal diode controller (VDECO reverse protection),Texas Instruments,LM74700-Q1,1,TBD,TBD,Digi-Key/Mouser,https://www.ti.com/lit/ds/symlink/lm74700-q1.pdf,VERIFIED
-15,REQ-LCM,N-MOSFET for ideal diode (>=40V >=20A automotive),TBD,select per LM74700-Q1 datasheet,1,TBD,TBD,,,
-16,REQ-LCM,Buck converter 4.2-60V 1.5A (5V and 3.3V rails),Texas Instruments,LMR36015-Q1 (LMR36015AQRNXRQ1),2,4.10,8.20,Digi-Key,https://www.digikey.com/en/products/detail/texas-instruments/LMR36015AQRNXRQ1/10820310,VERIFIED part; SECONDARY price
-17,REQ-LCM,Automotive watchdog timer,Texas Instruments,TPS3431-Q1,1,TBD,TBD,Digi-Key/Mouser,https://www.ti.com/lit/gpn/TPS3431-Q1,VERIFIED
-18,REQ-LCM,Dual comparator (10s hold),Texas Instruments,LM2903-Q1,1,TBD,TBD,,,UNVERIFIED this session
-19,REQ-LCM,Quad 2-input AND gate,Texas Instruments,SN74LVC08A-Q1,2,TBD,TBD,,,UNVERIFIED this session
-20,REQ-LCM,Schmitt buffer,Texas Instruments,SN74LVC1G17-Q1,1,TBD,TBD,,,UNVERIFIED this session
-21,REQ-LCM,CAN transceiver,TI or NXP,TCAN1042-Q1 or TJA1051,1,TBD,TBD,,,UNVERIFIED this session
-22,REQ-LCM,MCU module,Espressif,ESP32-S3-WROOM-1-N8,1,TBD,TBD,,,VERIFY temperature grade
-23,REQ-LCM,Input TVS diodes,Littelfuse,SM8S-series (select per LM74700-Q1 TVS method; clamp <=35V),2,TBD,TBD,,,UNVERIFIED selection
-24,REQ-LCM,PCB-mount mini blade fuse holders,TBD,TBD,8,TBD,TBD,,,
-25,REQ-LCM,Custom LCM PCB (2-layer 2oz) + enclosure (IP65+),Custom,JLCPCB/PCBWay + sealed enclosure,1,TBD,TBD,,,Design pending schematic capture
-26,REQ-Connectors,DT 4-way pairs (HMI + emergency switch),TE Deutsch,DT04-4P/DT06-4S + W4P/W4S,2,TBD,TBD,,,VERIFY ratings
-27,REQ-Connectors,DT 12-way pairs A/B/C (headlamp end x2 + PDCC end x2 + J-VEH),TE Deutsch,DT04-12P*/DT06-12S* + W12P/W12S,5,TBD,TBD,,,VERIFY ratings
-28,REQ-Connectors,PDCC power studs + ring terminals + boots (replaces LCM J1),TBD,M6/M8 studs,1 lot,TBD,TBD,,,
-29,REQ-Connectors,DT size-16 solid contacts (pins+sockets) + cavity plugs,TE Deutsch,select per gauge,1 lot,TBD,TBD,,,
-30,REQ-Connectors,Factory-interface pigtails: headlamp-switch connector mate + column-switch connector mate + cluster tap,TBD,TBD (GM/Delphi housings - identify),1 lot,TBD,TBD,,,UNVERIFIED housing part numbers
-31,REQ-Wire,TXL wire 10/14/16/18/20 AWG assorted colours,TBD,SAE J1128 TXL,1 lot,TBD,TBD,,,
-32,REQ-Wire,Loom/braided sleeve + adhesive heat shrink + firewall grommet,TBD,TBD,1 lot,TBD,TBD,,,
-33,REQ-Sensors,10k NTC sealed housing sensors,TDK/EPCOS or equivalent,TBD,2,TBD,TBD,,,UNVERIFIED part
-34,REQ-Decorative,Honeycomb backlight strip Cool White 6000K 50cm (qty per housing TBD by layout),Diode Dynamics,FlexLight LED Strip (DD0192P listed - confirm SKU),2,39.96,79.92,diodedynamics.com,https://www.diodedynamics.com/products/flexlight-led-strip,VERIFIED specs (9-16V IP67 -40..85C); current MEASURE; PWM bench test
-35,REQ-Decorative,DRL strip Cool White 6000K 50cm,Diode Dynamics,FlexLight LED Strip (DD0192P listed - confirm SKU),2,39.96,79.92,diodedynamics.com,https://www.diodedynamics.com/products/flexlight-led-strip,VERIFIED specs; current MEASURE
-36,REQ-Required-lamp,Amber 4in round LED Front/Park/Turn PL-3 (park 0.03A / turn 0.38A),Truck-Lite,4050A (+ PL-3 pigtail),2,TBD,TBD,TBD,https://www.truck-lite.com/4050a.html,VERIFIED part; SECONDARY current; I6 vs J588 compliance check
-37,REQ-Vehicle,LED-compatible turn/hazard flasher for 2001 S10,TBD,TBD (O-7),1,TBD,TBD,,,OPEN
-38,REQ-Housing,Membrane pressure-equalization vents,TBD (e.g. Gore automotive vents),TBD,2,TBD,TBD,,,UNVERIFIED part
-39,OPT,Projector current sensing (shunt + INA180-Q1) x4,Texas Instruments,INA180-Q1,4,TBD,TBD,,,Phase 2
-40,OPT,Housing cooling fans (driven by AUX channels),TBD,TBD,2,TBD,TBD,,,Only if thermal test requires
-41,OPT,Compact projector alternative,HELLA,Module 60 LED family,4,TBD,TBD,,,UNVERIFIED; only if O-3 fails
-42,TOOL,Deutsch solid contact crimp tool,TE Deutsch,HDT-48-00,1,TBD,TBD,,,
-43,REQ-Required-lamp,Front side marker amber 2.5in round LED P2,Truck-Lite,10250Y (+ Fit N Forget M/C pigtail),2,TBD,TBD,TBD,https://www.truck-lite.com/10250y-1.html,VERIFIED P2 and size; current MEASURE
-44,REQ-PDCC,PDCC enclosure (holds RTMR + LCM PCB + diode board; DT bulkheads),Custom,TBD,1,TBD,TBD,,,Design pending
-45,REQ-LCM,Amber OR-node Schottky diodes >=3A >=40V AEC-Q101 (D32-D35),TBD,TBD,4,TBD,TBD,,,
-46,REQ-LCM,Fail-ON driver MOSFETs (Q5 logic-level automotive N-FET + Q6 small-signal),TBD,TBD,2,TBD,TBD,,,
-47,REQ-Vehicle,Dimmer ladder resistors (R_base + R1/R2/R4/R8; values from doc 09 5.2),TBD,E24 0.5W,5,TBD,TBD,,,
-48,REQ-LCM,Photorelays AEC-Q101 >=60V (PR1-PR6 interior ON/defeat + dimmer ladder),TBD (e.g. Panasonic PhotoMOS automotive),TBD,6,TBD,TBD,,,UNVERIFIED part
-49,REQ-Vehicle,Add-a-circuit fuse taps (2x underhood LT/RT TURN + 1x IP fuse 11 IGN),TBD,match fuse type (mini/ATO),3,TBD,TBD,,,check fuse type
-50,OPT,I2C GPIO expander automotive (if ESP32 pins run short),TI,TCA9535-Q1 class,1,TBD,TBD,,,UNVERIFIED
+1,REQ-Projector,90mm LED low beam module (low+DRL+position variant),HELLA,012488121 (family 1BL 012 488-xxx),2,298.57,597.14,partshubdirect.com,https://www.partshubdirect.com/products/hella-012488121-90mm-led-l4060-low-beam-headlights-with-daytime-running-and-position-light,SECONDARY price; family VERIFIED
+2,REQ-Projector,90mm LED high beam module,HELLA,011988031 (or plain L4060 high beam $335.28 fiperformance),2,215.45,430.90,partshubdirect.com,https://www.partshubdirect.com/products/hella-011988031-90mm-l4060-led-high-beam-driving-lamp-module-with-daytime-running-and-position-light,SECONDARY
+3,REQ-Projector,90mm module mounting kit,HELLA,9XX 254 163-001 (per brochure) - confirm fit for L4060,4,TBD,TBD,TBD,https://www.hella.com/australiansolutions/assets/documents_global/Hella-90mm-Module-Brochure-0224.pdf,UNVERIFIED applicability
+4,REQ-Amber,3in square LED pod yellow lens with amber backlight (main 1.1A turn / backlight 0.03A running),Diode Dynamics,SS3 Sport Yellow Fog or Flood w/ amber backlight (DD6126/DD6125 family - confirm variant),2,TBD,TBD,diodedynamics.com,https://images.diodedynamics.com/docs/install/universal/stage_series/Stage_Series_3in_Worklight_Pod_Info_Guide.pdf,VERIFIED electrical; price TBD
+5,REQ-Decorative,Honeycomb backlight strip Cool White 6000K 50cm,Diode Dynamics,FlexLight LED Strip (DD0192P listed - confirm SKU),2,39.96,79.92,diodedynamics.com,https://www.diodedynamics.com/products/flexlight-led-strip,VERIFIED 9-16V IP67 -40..85C; current MEASURE
+6,REQ-Decorative,DRL strip Cool White 6000K 50cm,Diode Dynamics,FlexLight LED Strip (DD0192P listed - confirm SKU),2,39.96,79.92,diodedynamics.com,https://www.diodedynamics.com/products/flexlight-led-strip,VERIFIED; current MEASURE
+7,REQ-HMI,4.3in ESP32-S3 touch display with CAN and 7-36V input,Waveshare,ESP32-S3-Touch-LCD-4.3B (SKU 27848),1,TBD,TBD,waveshare.com,https://docs.waveshare.com/ESP32-S3-Touch-LCD-4.3B,VERIFIED specs
+8,REQ-FRB,Independent sealed fuse/relay box IP66 (>=22 mini fuses + >=7 relays + room for TIM/diode board),Eaton Bussmann,Series 15300 RTMR - configuration TBD,1,TBD,TBD,TBD,https://www.mouser.com/datasheet/2/87/bus_cbt_ds_series_15300_rtmr-560241.pdf,VERIFIED family; config TBD (15305-1 20-fuse base $37 at connectorconcepts)
+9,REQ-FRB,Main fuse terminal block on top-post battery stud,Blue Sea Systems,5191 MRBF Terminal Fuse Block,1,37.99,37.99,currentconnected.com,https://www.bluesea.com/products/5191/MRBF_Terminal_Fuse_Block_-_30_to_300A,VERIFIED; SECONDARY price
+10,REQ-FRB,Main fuse 30A MRBF (1 installed + 1 spare),Blue Sea Systems,MRBF 30A,2,TBD,TBD,TBD,https://www.bluesea.com/products/category/Marine_Rated_Battery_Fuses,
+11,REQ-FRB,ISO micro 280 relay 12V resistor-suppressed >=20A (K1-K5 K7 K8 + 1 spare),TBD (Bosch/Hella/TE),TBD,8,TBD,TBD,TBD,,
+12,REQ-FRB,Mini blade fuses assortment 1/2/3/5/10A,Littelfuse or Bussmann,ATM series,1 lot,TBD,TBD,TBD,,
+13,REQ-FRB,Coil diode-OR diodes 1A >=100V (D1-D3 D6 D7 D10 D11) on small diode board,TBD,S1x/1N400x class,7,TBD,TBD,,,
+14,REQ-FRB,Emergency headlamp switch sealed guarded illuminated,TBD,TBD,1,TBD,TBD,,,
+15,REQ-TIM,Turn Interface Module smart switch dual 2-2.5A,Infineon,BTS7120-2EPA (PROFET+2),1,TBD,TBD,Digi-Key/Mouser,https://www.infineon.com/assets/row/public/documents/10/46/infineon-faq-profet2-12v-faqdocument-en.pdf,VERIFIED family rating
+16,REQ-TIM,Dual-channel automotive optocoupler (turn inputs),TBD (AEC-Q101 class),TBD,2,TBD,TBD,,,UNVERIFIED part
+17,REQ-TIM,5V LDO 40V-input automotive (TIM logic),TI,TPS7B69-Q1 class,1,TBD,TBD,,,UNVERIFIED this session
+18,REQ-TIM,TIM PCB + sealed housing (potted),Custom,TBD,2,TBD,TBD,,,1 installed + 1 spare
+19,REQ-LCM,Smart high-side switch dual (decorative U1-U4),Infineon,PROFET+2 BTS7200-2EPC / BTS7120-2EPA (per measured load),4,TBD,TBD,Digi-Key/Mouser,https://www.infineon.com/assets/row/public/documents/10/49/infineon-bts7008-2epa-datasheet-en.pdf,VERIFIED family
+20,REQ-LCM,Smart high-side switch (power latch U10),Infineon,BTS7200-2EPC class,1,TBD,TBD,,,VERIFY datasheet
+21,REQ-LCM,Ideal diode controller,Texas Instruments,LM74700-Q1,1,TBD,TBD,,https://www.ti.com/lit/ds/symlink/lm74700-q1.pdf,VERIFIED
+22,REQ-LCM,N-MOSFET for ideal diode (>=40V >=20A automotive),TBD,per LM74700-Q1 datasheet,1,TBD,TBD,,,
+23,REQ-LCM,Buck converter 4.2-60V 1.5A (5V and 3.3V),Texas Instruments,LMR36015-Q1 (LMR36015AQRNXRQ1),2,4.10,8.20,Digi-Key,https://www.digikey.com/en/products/detail/texas-instruments/LMR36015AQRNXRQ1/10820310,VERIFIED part; SECONDARY price
+24,REQ-LCM,Automotive watchdog timer,Texas Instruments,TPS3431-Q1,1,TBD,TBD,,https://www.ti.com/lit/gpn/TPS3431-Q1,VERIFIED
+25,REQ-LCM,Dual comparator (10s hold),Texas Instruments,LM2903-Q1,1,TBD,TBD,,,UNVERIFIED this session
+26,REQ-LCM,Quad AND gate,Texas Instruments,SN74LVC08A-Q1,2,TBD,TBD,,,UNVERIFIED this session
+27,REQ-LCM,Schmitt buffer,Texas Instruments,SN74LVC1G17-Q1,1,TBD,TBD,,,UNVERIFIED this session
+28,REQ-LCM,CAN transceiver,TI or NXP,TCAN1042-Q1 or TJA1051,1,TBD,TBD,,,UNVERIFIED this session
+29,REQ-LCM,MCU module,Espressif,ESP32-S3-WROOM-1-N8,1,TBD,TBD,,,VERIFY temperature grade
+30,REQ-LCM,Input TVS diodes,Littelfuse,SM8S series (clamp <=35V per LM74700-Q1 method),2,TBD,TBD,,,UNVERIFIED selection
+31,REQ-LCM,Photorelays AEC-Q101 >=60V (PR1-PR6 interior + dimmer ladder),TBD,TBD,6,TBD,TBD,,,UNVERIFIED part
+32,REQ-LCM,Dimmer ladder resistors (values from doc 09 5.2),TBD,E24 0.5W,5,TBD,TBD,,,
+33,REQ-LCM,LCM PCB + enclosure IP54+,Custom,JLCPCB/PCBWay + enclosure,1,TBD,TBD,,,Design pending
+34,REQ-Connectors,DT 12-way pairs: headlamp end x2 + FRB end x2 + T1 T2 T3,TE Deutsch,DT04-12P*/DT06-12S* + wedgelocks,7,TBD,TBD,,,VERIFY ratings
+35,REQ-Connectors,DT 4-way pairs: J-TURN + J-HMI,TE Deutsch,DT04-4P/DT06-4S,2,TBD,TBD,,,
+36,REQ-Connectors,DT 6-way pair: J-INT,TE Deutsch,DT04-6P/DT06-6S,1,TBD,TBD,,,
+37,REQ-Connectors,DT06-3S (mates SS3 integrated connector inside headlamp),TE Deutsch,DT06-3S + W3S,2,TBD,TBD,,,
+38,REQ-Connectors,DT size-16 contacts + cavity plugs,TE Deutsch,per gauge,1 lot,TBD,TBD,,,
+39,REQ-Connectors,Factory-interface pigtails: headlamp-switch mate + column-switch mate,TBD,TBD (identify GM/Delphi housings),1 lot,TBD,TBD,,,UNVERIFIED housing P/N
+40,REQ-Vehicle,Add-a-circuit fuse taps (LT TURN + RT TURN underhood + IP fuse 11),TBD,match fuse type,3,TBD,TBD,,,check fuse type
+41,REQ-Vehicle,Load-independent electronic turn/hazard flasher for 2001 S10,TBD,TBD (O-7),1,TBD,TBD,,,OPEN
+42,REQ-Wire,TXL wire 10/14/16/18/20 AWG,TBD,SAE J1128 TXL,1 lot,TBD,TBD,,,
+43,REQ-Wire,Loom + adhesive heat shrink + firewall grommet,TBD,TBD,1 lot,TBD,TBD,,,
+44,REQ-Sensors,10k NTC sealed housing sensors,TDK/EPCOS or equivalent,TBD,2,TBD,TBD,,,UNVERIFIED part
+45,REQ-Housing,Membrane pressure-equalization vents,TBD,TBD,2,TBD,TBD,,,UNVERIFIED part
+46,OPT,Projector current sensing (shunt + INA180-Q1) x4,Texas Instruments,INA180-Q1,4,TBD,TBD,,,Phase 2
+47,OPT,Housing fans on AUX channels,TBD,TBD,2,TBD,TBD,,,Only if thermal test requires
+48,OPT,Compact projector alternative,HELLA,Module 60 LED family,4,TBD,TBD,,,Only if housing fit fails
+49,OPT,I2C GPIO expander automotive,TI,TCA9535-Q1 class,1,TBD,TBD,,,UNVERIFIED
+50,TOOL,Deutsch solid contact crimp tool,TE Deutsch,HDT-48-00,1,TBD,TBD,,,

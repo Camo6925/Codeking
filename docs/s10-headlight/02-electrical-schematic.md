@@ -1,207 +1,162 @@
-# Deliverable 2 – Preliminary Electrical Schematic (Rev C)
+# Deliverable 2 – Preliminary Electrical Schematic (Rev D)
 
-Text schematics in sheet form. Net names are UPPER_CASE and shared across sheets. Reference
-designators match [03-circuit-schedules.md](03-circuit-schedules.md) and the BOM. **(P)** =
-provisional value, re-run `tools/wire_calc.py` after measurement.
+Text schematics in sheet form. Net names UPPER_CASE, shared across sheets. **(P)** = provisional,
+re-run `tools/wire_calc.py` with as-built lengths and measured loads.
 
 ```
-──┤F├──  fuse     ──|>|──  diode (anode→cathode)     ─o/o─  relay NO contact    ─o\o─ relay NC contact
-[K n]    relay coil         ─▷|─  Zener/TVS            ⏚  PDCC ground stud (never sheet metal)
+──┤F├── fuse   ──|>|── diode   ─o/o─ relay NO contact   [K n] relay coil   ⏚ FRB ground stud (never sheet metal)
 ```
 
-Everything on sheets 1–4 and 6 lives inside the **PDCC** (cab, driver side). Sheet 5 is the passive
-headlamp.
+Sheets 1, 2 and 5 are the **FRB** (independent fuse/relay box, under hood). Sheets 3 and 4 are the
+**LCM** (cab). Sheet 6 is the passive headlamp. Sheet 7 covers the trunks and vehicle interface.
 
 ---
 
-## Sheet 1 – Battery, main fuse, PDCC distribution, grounds
+## Sheet 1 – Battery, main fuse, FRB distribution
 
 ```
- BATTERY(+) top post ─┤FM 30A (P) MRBF in Blue Sea 5191 on the post├── 8 AWG (P), loomed, firewall grommet ──► PDCC VBUS stud
- BATTERY(−) ───────────────────────────────── 8 AWG (P) ─────────────────────────────► PDCC ⏚ stud
+ BATTERY(+) top post ─[Blue Sea 5191 + 30 A MRBF]─ 10 AWG (P) ─► FRB VBUS stud
+ BATTERY(−) ───────────────────────────────────── 10 AWG (P) ─► FRB ⏚ stud
 
- VBUS ─┤F1 5A (P)├─o/o─[K2]─ LO_L_PWR ──────► J-HLL-1
- VBUS ─┤F2 5A (P)├─o/o─[K3]─ LO_R_PWR ──────► J-HLR-1
- VBUS ─┤F3 5A (P)├─o/o─[K4]─ HI_L_PWR ──────► J-HLL-2
- VBUS ─┤F4 5A (P)├─o/o─[K5]─ HI_R_PWR ──────► J-HLR-2
- VBUS ─┤F5 10A(P)├─o/o─[K8]─ VDECO_RAW ─────► LCM power entry (sheet 4)
- VBUS ─┤F6 3A    ├───────── CTRL_BATT ──────► LCM latch (sheet 3)
- VBUS ─┤F7 5A    ├─o/o─[K1]─ IGN_SW ────────► coil bus (sheet 2), LCM IGN sense
- VBUS ─┤F8 5A    ├───────── EMER_FEED ──────► J-EMER-1 → S1
- VBUS ───────────o/o─[K6]─ MKR_BUS ─┬─┤F12 2A├─ MARKER_L ─► J-HLL-8
-                                    └─┤F13 2A├─ MARKER_R ─► J-HLR-8
- VBUS ─┤F11 3A   ├─o/o─[K9]─ AMB_FS ─────────► LCM amber OR node (sheet 4)
- F10 AUX spare · F14 spare · F16 spare
-
- ⏚ PDCC ground stud ─┬─ J-HLL-3 PRJ_RTN_L (16 AWG)    ─┬─ J-HLL-9 DECO_RTN_L (14 AWG)
-                     ├─ J-HLR-3 PRJ_RTN_R (16 AWG)     └─ J-HLR-9 DECO_RTN_R (14 AWG)
-                     ├─ LCM PGND (internal, 14 AWG) and LCM LGND (internal, 18 AWG)
-                     └─ K1–K9 coil returns (K9 via the fail-ON driver, sheet 4)
+ PROJECTORS                         DECORATIVE BRANCH FUSES (inputs from LCM via T1)
+ VBUS─┤F1 5A├─o/o[K2]─► J-HLL-1     T1-5  HONEY_L   ─┤F11 3A├─► J-HLL-4
+ VBUS─┤F2 5A├─o/o[K3]─► J-HLR-1     T1-9  HONEY_R   ─┤F12 3A├─► J-HLR-4
+ VBUS─┤F3 5A├─o/o[K4]─► J-HLL-2     T1-6  DRL_L     ─┤F13 3A├─► J-HLL-5
+ VBUS─┤F4 5A├─o/o[K5]─► J-HLR-2     T1-10 DRL_R     ─┤F14 3A├─► J-HLR-5
+                                    T1-7  AMB_RUN_L ─┤F15 2A├─► J-HLL-6
+ SUPPLIES                           T1-11 AMB_RUN_R ─┤F16 2A├─► J-HLR-6
+ VBUS─┤F5 10A├─o/o[K8]─► T1-1 VDECO T1-8  AUX_L     ─┤F19 3A├─► J-HLL-12
+ VBUS─┤F6 3A ├─────────► T1-3 CTRL  T1-12 AUX_R     ─┤F20 3A├─► J-HLR-12
+ VBUS─┤F7 5A ├─o/o[K1]─► IGN_SW
+ VBUS─┤F8 5A ├─────────► T3-7 EMER_FEED              TURN (from TIM, sheet 5)
+ VBUS─┤F10 5A├─────────► TIM VS (always hot)         TIM OUT0 ─┤F17 3A├─► J-HLL-7
+                                                     TIM OUT1 ─┤F18 3A├─► J-HLR-7
+ ⏚ ─┬─ J-HLL-3 / J-HLR-3 PRJ_RTN (16 AWG)
+    ├─ J-HLL-9 / J-HLR-9 DECO_RTN (14 AWG)
+    ├─ T1-2 PGND (14 AWG), T1-4 LGND (18 AWG)
+    └─ coil returns, TIM GND, T3-2 SIG_GND
 ```
 
-* The 8 AWG between the battery and FM is the only unprotected conductor: shortest possible, loomed,
-  clamped.
-* The RTMR is rear-terminal (each cavity is wired individually), so fuse-after-relay arrangements like
-  MKR_BUS → F12/F13 are made with internal jumpers.
+The RTMR is rear-terminal (each cavity wired individually), so fuses after relays and fuses on
+returned LCM outputs are made with internal wiring.
 
 ---
 
-## Sheet 2 – Relay logic & factory interface (no MCU)
+## Sheet 2 – FRB relay logic (no MCU)
 
 ```
- Factory IGN RUN ─┤F0 1A├─[K1 coil]─⏚          (tap point per O-6; K1 contact makes IGN_SW, sheet 1)
- EMER_FEED ─[S1 guarded, illuminated toggle]─ EMER_SW
+ IP fuse 11 tap ─┤F0 1A├─ T3-1 IGN_TAP ─[K1 coil]─⏚          K1 contact → IGN_SW (sheet 1)
+ EMER_FEED ─ T3-7 ─[S1 guarded, lit]─ T3-8 ─ EMER_SW
 
- LOW BEAMS     IGN_SW ─|>|D1─┐
-               HI_REQ ─|>|D2─┼─ LO_COIL ─┬─[K2 coil]─⏚
-               EMER_SW ─|>|D3┘           └─[K3 coil]─⏚
- HIGH BEAMS    HI_REQ ───────── HI_COIL ─┬─[K4 coil]─⏚
-                                         └─[K5 coil]─⏚
- MARKERS       IGN_SW ─|>|D4─┬─[K6 coil]─⏚
-               EMER_SW ─|>|D5┘
- PARK SIGNAL   IGN_SW ─|>|D6─┬─[K7 coil]─⏚    K7 contact (dry): J-VEH-7 PARK_SIG ─o/o─ J-VEH-8 SW_REF
-               EMER_SW ─|>|D7┘                 → old switch pins 1 and (2/4 or 5), per 09 §5.2
- DECORATIVE    IGN_SW ─────────[K8 coil]─⏚    (no EMER: decorative stays off in emergency)
- AMBER FAIL-ON IGN_SW ─|>|D8─┬─[K9 coil]─ FS_DRV (LCM fail-ON driver, sheet 4)
-               EMER_SW ─|>|D9┘
- STALK FEED    IGN_SW ─|>|D10┐
-               EMER_SW ─|>|D11┴─┤F9 2A├─ J-VEH-3 STALK_FEED ─► stalk dimmer common (re-pinned, 09 §2.1)
-               stalk HI / flash-to-pass ─► J-VEH-4 HI_REQ
- (Rev C: no cluster high-beam indicator; HI_REQ is sensed by the LCM and shown on the touchscreen)
+ IGN_SW ─|>|D1─┐
+ HI_REQ ─|>|D2─┼─ LO_COIL ─┬─[K2]─⏚        HI_REQ ── HI_COIL ─┬─[K4]─⏚
+ EMER_SW─|>|D3─┘           └─[K3]─⏚                           └─[K5]─⏚
+ IGN_SW ─|>|D6─┬─[K7 coil]─⏚   K7 dry contact: T3-5 PARK_SIG ─o/o─ T3-6 SW_REF (old switch pin 1 ↔ ref)
+ EMER_SW─|>|D7─┘
+ IGN_SW ────────[K8 coil]─⏚
+ IGN_SW ─|>|D10─┐
+ EMER_SW─|>|D11─┴─┤F9 2A├─ T3-3 STALK_FEED → stalk dimmer common;  stalk HI → T3-4 HI_REQ
 
- D1–D11: 1 A ≥ 100 V rectifier, AEC-Q101 preferred (on a small diode board inside the PDCC, or RTMR
-         plug-in diode modules [VERIFY]).
- K1–K9: ISO micro 280, 12 V, resistor-suppressed coil, ≥ 20 A contacts.
-```
-
-| IGN | Stalk | S1 | Lows | Highs | Markers / rear park | Amber park |
-|---|---|---|---|---|---|---|
-| OFF | any | off | off | off | off | off |
-| RUN | low | off | **on** | off | on | PWM (or full if LCM unhealthy) |
-| RUN | high / FTP | off | **on** | **on** | on | same |
-| any | low | **on** | on | off | on | full (K9) or PWM |
-| any | high | **on** | on | on | on | same |
-
----
-
-## Sheet 3 – LCM power, 10 s hardware latch, regulators, watchdog
-
-Unchanged from Rev A:
-
-```
- CTRL_BATT ─▷|TVS2─⏚ ; ─ VS of U10 (PROFET+2, BTS7200-2EPC class) ─ OUT0 ─|>|D20 Schottky─ VCTRL
- VCTRL ─► U11 LMR36015-Q1 → +5V_HMI (HMI 450 mA verified) ; ─► U12 LMR36015-Q1 → +3V3
-
- IGN_SW ─47k─┬─10k─⏚ ; DZ1 3.6V ; 100nF → U14 SN74LVC1G17-Q1 → IGN_OK
- IGN_SW ─22k─┬─10k─⏚ ; DZ2 5.1V → IGN_5V
-
- 10 s RC hold:  IGN_5V ─|>|BAT54─1k─┬─ V_CT ── CT 10 µF ─⏚ ; RT 470k–1M (select on test, 10 s ±1 s) ─⏚
-   U15A LM2903-Q1: IN+ V_CT, IN− 1.86 V (100k/59k from +5V), 1 MΩ hysteresis → HOLD (10k pull-up)
- LATCH_IN = IGN_5V ─|>|─┐
-            HOLD   ─|>|─┴─4.7k─ U10 IN0 ; 47k pull-down
- U16 TPS3431-Q1 watchdog (≈1 s): WDI ← MCU, WDO → WDOK (pull-up) → gating (sheet 4) + ESP32 EN
+ D1–D11: 1 A ≥100 V rectifiers (AEC-Q101 preferred) on a small diode board in the FRB.
+ K1–K5, K7, K8: ISO micro 280, 12 V, resistor-suppressed coils, ≥ 20 A contacts. (K6, K9 deleted in Rev D.)
 ```
 
 ---
 
-## Sheet 4 – LCM outputs: 3 PWM channels → protected L/R outputs, amber OR node, fail-ON driver
+## Sheet 3 – LCM power, 10 s hardware latch, regulators, watchdog (unchanged)
 
 ```
- VDECO_RAW ─▷|TVS1─ Q1 N-MOSFET ideal diode (U17 LM74700-Q1) ─ VDECO ─ bulk 100 µF + 100 nF per PROFET
-
- Gating (U18/U19 SN74LVC08A-Q1, +3V3; every MCU output has a 100k pull-down):
-   G1 EN      = IGN_OK · WDOK            G5 CH3_L_G = CH3_G · ALLOW_L   (turn blanking)
-   G2 CH1_G   = PWM1 · EN  (honeycomb)   G6 CH3_R_G = CH3_G · ALLOW_R
-   G3 CH2_G   = PWM2 · EN  (DRL strip)   G7 AUX_L_G = AUX_L · EN
-   G4 CH3_G   = PWM3 · EN  (amber park)  G8 HEALTHY = MCU_OK · WDOK
-   Each gated channel → separate 4.7 kΩ R_IN to the LEFT and RIGHT PROFET inputs.
-
- PROFET+2 dual channels, grouped by side (part per O-4):
-   U1 LEFT-A : IN0 CH1_G   → OUT0 ─┤F21 3A├─ HONEY_L+  ─► J-HLL-4
-               IN1 CH2_G   → OUT1 ─┤F22 3A├─ DRL_L+    ─► J-HLL-5
-   U2 LEFT-B : IN0 CH3_L_G → OUT0 ─┤F23 3A├─|>|D34─┐
-               IN1 AUX_L_G → OUT1 ─┤F24 3A├─ AUX_L+    ─► J-HLL-12
-                                  AMB_FS ─|>|D32───┴─ AMB_PARK_L ─► J-HLL-6
-   U3 RIGHT-A: IN0 CH1_G   → OUT0 ─┤F25 3A├─ HONEY_R+  ─► J-HLR-4
-               IN1 CH2_G   → OUT1 ─┤F26 3A├─ DRL_R+    ─► J-HLR-5
-   U4 RIGHT-B: IN0 CH3_R_G → OUT0 ─┤F27 3A├─|>|D35─┐
-               IN1 AUX_R_G → OUT1 ─┤F28 3A├─ AUX_R+    ─► J-HLR-12
-                                  AMB_FS ─|>|D33───┴─ AMB_PARK_R ─► J-HLR-6
-   D32–D35: AEC-Q101 Schottky ≥ 3 A ≥ 40 V. They isolate the K9 bypass, the PROFET outputs and the two
-   sides from each other. A sense tap after D34/D35 lets firmware confirm amber voltage.
-
- Fail-ON driver for K9 (powered from IGN_SW, works with the LCM unpowered):
-   K9 coil(−) = FS_DRV ── Q5 drain ; Q5 = logic-level automotive N-MOSFET, source ⏚
-   Q5 gate ── R 47k ── IGN_SW (gate clamped by a 10 V zener to source). There is deliberately NO gate
-               pull-down: Q5 must default ON whenever IGN_SW is present.
-   Q6 (small N-MOSFET/NPN): collector/drain on Q5 gate, base/gate ← HEALTHY (G8) via 10k, 100k pull-down
-   → HEALTHY high: Q6 on → Q5 off → K9 open → amber under PWM control
-   → HEALTHY low / LCM dead / no +3V3: Q6 off → Q5 on → K9 closed → amber park full
-
- Interior emulation (Rev C), photorelays PR1–PR6 (AEC-Q101 class, ≥60 V, LED side driven from MCU
- GPIO via 330 Ω; all open when the LCM is unpowered):
-   PR1: J-VEH-9  COURTESY_SIG ─o/o─ J-VEH-8 SW_REF     → Interior ON
-   PR2: J-VEH-11 DEFEAT_SIG   ─o/o─ J-VEH-8 SW_REF     → Interior OFF (defeat)
-   Dimmer: J-VEH-10 DIM_SIG ─ R_base ─ R1 ─ R2 ─ R4 ─ R8 ─ J-VEH-12 DIM_REF
-                                       │    │    │    │
-                                      PR3  PR4  PR5  PR6 (each shorts its resistor)
-   Values from the doc 09 §5.2 measurement; all-open = default dash level. Firmware never closes PR1 and PR2 together.
-
- Diagnostics: DEN and DSEL common to U1–U4. IS_n ─R_SENSE─⏚, ─4.7k─ADC─4.7µF─⏚ (τ ≈ 22 ms averages 250 Hz PWM).
+ T1-3 CTRL_BATT ─TVS─ U10 PROFET+2 (latch) ─|>|D20─ VCTRL ─► U11 LMR36015-Q1 → +5V_HMI ; U12 → +3V3
+ T2-1 IGN_SW ─47k/10k, 3.6 V Zener, Schmitt U14 → IGN_OK ;  ─22k/10k, 5.1 V Zener → IGN_5V
+ IGN_5V ─|>|─1k─ CT 10 µF ∥ RT 470k–1M (select on test for 10 s ±1 s); U15 LM2903-Q1 vs 1.86 V → HOLD
+ LATCH_IN = IGN_5V OR HOLD (diodes) → 4.7k → U10 IN ; 47k pull-down
+ U16 TPS3431-Q1 watchdog ≈1 s → WDOK → gating + ESP32 EN
 ```
 
 ---
 
-## Sheet 5 – Passive headlamp (each side identical; ONE connector)
+## Sheet 4 – LCM decorative outputs (3 PWM channels → 6 L/R outputs + 2 AUX) and interior
 
 ```
- J-HL* : DT04-12P on the headlamp pigtail (left key A, right key B) / DT06-12S on the harness
-  1 LO_PWR ──────► HELLA low module (+)          7 AMB_TURN+ ─► 4050A TURN wire (PL-3)
-  2 HI_PWR ──────► HELLA high module (+)         8 MARKER+   ─► Truck-Lite 10250Y marker (+)
-  3 PRJ_RTN ◄───── both HELLA modules (−)        9 DECO_RTN  ◄─ honeycomb, DRL, amber, marker, fan (−)
-  4 HONEY+ ──────► FlexLight strip(s) behind honeycomb   10 NTC_A ─┐ 10 kΩ NTC on inner housing wall
-  5 DRL+   ──────► FlexLight DRL strip           11 NTC_B ─┘ (twisted pair)
-  6 AMB_PARK+ ───► 4050A PARK wire (PL-3)      12 AUX+   ─► optional housing fan (+)
+ T1-1 VDECO ─TVS─ LM74700-Q1 ideal diode ─ VDECO_P (bulk 100 µF + 100 nF per PROFET)
 
- Inside the housing: each element on its own sealed internal plug so it can be replaced individually;
- internal return bus for pins 3 and 9 is a crimped multi-wire splice, sealed; membrane vent at top;
- pigtail exits through an IP68 gland. NO fuses, relays, diodes or electronics in the headlamp.
+ Gating (SN74LVC08A-Q1; all MCU outputs 100k pull-down → OFF on reset/crash):
+   EN = IGN_OK·WDOK; CH1_G = PWM1·EN; CH2_G = PWM2·EN; CH3_G = PWM3·EN;
+   CH3_L_G = CH3_G·ALLOW_L; CH3_R_G = CH3_G·ALLOW_R; AUX_x_G = AUX_x·EN
+   Each gated signal → separate 4.7 kΩ R_IN to the LEFT and RIGHT PROFET inputs (L/R synchronized).
+
+ U1 LEFT-A : CH1_G → OUT0 → T1-5 HONEY_L     CH2_G   → OUT1 → T1-6 DRL_L
+ U2 LEFT-B : CH3_L_G → OUT0 → T1-7 AMB_RUN_L AUX_L_G → OUT1 → T1-8 AUX_L
+ U3 RIGHT-A: CH1_G → OUT0 → T1-9 HONEY_R     CH2_G   → OUT1 → T1-10 DRL_R
+ U4 RIGHT-B: CH3_R_G → OUT0 → T1-11 AMB_RUN_R AUX_R_G → OUT1 → T1-12 AUX_R
+ (Branch fuses are in the FRB, F11–F16, F19, F20. The trunk wires are protected by F5 + PROFET limits.)
+ IS sense → R_SENSE → RC (τ≈22 ms) → ADC.  DEN/DSEL common.
+
+ Interior (J-INT to the old headlamp-switch pigtail), photorelays PR1–PR6, all open when the LCM is off:
+   PR1 COURTESY_SIG ─o/o─ SW_REF → interior ON        PR2 DEFEAT_SIG ─o/o─ SW_REF → interior OFF
+   DIM_SIG ─ R_base ─ R1 ─ R2 ─ R4 ─ R8 ─ DIM_REF, each R shorted by PR3…PR6 → dash level
 ```
 
 ---
 
-## Sheet 6 – Vehicle interface (J-VEH) and HMI
+## Sheet 5 – Turn Interface Module (TIM), in the FRB, no microcontroller
 
 ```
- J-VEH (DT 12-way, key C) → pigtails to factory connectors:
-   1 IGN_TAP     ← factory IGN RUN (via F0 1 A at the tap)
-   2 SIG_GND     — reference
-   3 STALK_FEED  → stalk dimmer common          (column connector pigtail)
-   4 HI_REQ      ← stalk HI / flash-to-pass      (column connector pigtail)
-   5 TURN_L      ← fuse tap in underhood LT TURN (2 A)
-   6 TURN_R      ← fuse tap in underhood RT TURN (2 A)
-   7 PARK_SIG     ↔ old switch pin 1 (LT BLU)          K7 dry contact
-   8 SW_REF       ↔ old switch pin 2/4 (ORN) or 5 (BLK), per doc 09 §5.2
-   9 COURTESY_SIG ↔ old switch pin 7 (DK BLU/WHT)       PR1
-  10 DIM_SIG      ↔ old switch pin 10 (DK GRN)          dimmer ladder
-  11 DEFEAT_SIG   ↔ old switch pin 9 (PPL)              PR2
-  12 DIM_REF      ↔ old switch pin 2/4 or 5             dimmer ladder reference
+ Factory LT TURN fuse tap ─┤1A├─ J-TURN-1 ── R 10k ──► OC1 LED ──⏚     (≈1 mA load on the factory circuit)
+ Factory RT TURN fuse tap ─┤1A├─ J-TURN-2 ── R 10k ──► OC2 LED ──⏚      reverse diode + 100 nF across each LED
+ OC1/OC2: dual-channel automotive optocouplers (AEC-Q101 class, [UNVERIFIED part]):
+   channel A transistor: pulls TIM U5 INx high from a local 5 V (from F10 via TPS7B69-Q1-class LDO, [UNVERIFIED])
+   channel B transistor: open collector → T2-2 / T2-3 TURN_x_SNS to the LCM (isolated status)
+ U5 PROFET+2 dual (BTS7120-2EPA class, 2–2.5 A/ch), VS = F10 (always hot):
+   IN0 ← OC1A → OUT0 → F17 → J-HLL-7 (SS3 main beam, 1.1 A)
+   IN1 ← OC2A → OUT1 → F18 → J-HLR-7
+   10k pull-downs on IN0/IN1 → OFF when no signal. Sleep current µA class (key-off drain).
+ Result: turn and hazard flash exactly with the factory flasher, key on or off, at full SS3 brightness,
+ powered entirely from the independent fuse box. Galvanically isolated from the factory circuit.
+```
 
- Sense inputs to LCM (47k/10k divider, 10 nF, BAT54S clamp → GPIO): IGN_SW, HI_REQ, TURN_L, TURN_R,
-   RLY_LO_L/R, RLY_HI_L/R (taken after F1–F4), MKR_BUS, AMB_PARK_L/R. Load < 0.3 mA each.
+Hyperflash: the factory flasher now sees only the opto load (≈1 mA per side). An **electronic,
+load-independent flasher** is required (O-7).
 
- J-HMI (DT 4-way): 1 +5V_HMI  2 GND  3 CANH  4 CANL (twisted). 120 Ω at the LCM and at the HMI.
- J-EMER (DT 4-way): 1 EMER_FEED  2 EMER_SW  3 S1 lamp +  4 GND.
+---
+
+## Sheet 6 – Passive headlamp (one 12-way connector)
+
+```
+ J-HL* DT04-12P on the headlamp pigtail (left key A, right key B) / DT06-12S on the harness
+  1 LO_PWR   → HELLA low module (+)          7 AMB_TURN+ → SS3 main beam (+)
+  2 HI_PWR   → HELLA high module (+)         8 SPARE (cavity plug)
+  3 PRJ_RTN  ← both HELLA modules (−)        9 DECO_RTN  ← FlexLights, SS3 ground, fan (−)
+  4 HONEY+   → FlexLight behind honeycomb   10 NTC_A ┐ 10 kΩ NTC on inner housing wall
+  5 DRL+     → FlexLight DRL strip          11 NTC_B ┘ (twisted pair)
+  6 AMB_RUN+ → SS3 backlight (blue, pod pin 3) 12 AUX+ → optional fan
+ SS3 pod connector: integrated Deutsch DT 3-pin. Pin 3 = backlight [VERIFIED]; pins 1/2 = main + / ground
+ [VERIFY on the pigtail]. Plug the pod's pigtail into an internal DT06-3S so the pod unplugs separately.
+```
+
+---
+
+## Sheet 7 – Trunks and vehicle interface
+
+```
+ T1 FRB↔LCM power/outputs (DT 12, key A)    T2 FRB↔LCM sense (DT 12, key B)     T3 FRB↔cab interface (DT 12, key C)
+  1 VDECO (14)     7 AMB_RUN_L               1 IGN_SW       7 RLY_HI_R          1 IGN_TAP (IP fuse 11, F0)
+  2 PGND (14)      8 AUX_L                   2 TURN_L_SNS   8 HI_REQ            2 SIG_GND
+  3 CTRL_BATT      9 HONEY_R                 3 TURN_R_SNS   9 NTC_L_A           3 STALK_FEED
+  4 LGND          10 DRL_R                   4 RLY_LO_L    10 NTC_L_B           4 HI_REQ
+  5 HONEY_L       11 AMB_RUN_R               5 RLY_LO_R    11 NTC_R_A           5 PARK_SIG (old sw pin 1)
+  6 DRL_L         12 AUX_R                   6 RLY_HI_L    12 NTC_R_B           6 SW_REF   (old sw pin 2/4 or 5)
+                                                                                7 EMER_FEED  8 EMER_SW
+                                                                                9 S1_LAMP   10–12 spare
+ J-TURN (FRB, DT 4): 1 TURN_L_IN  2 TURN_R_IN  3 GND  4 spare      (from the underhood fuse taps)
+ J-INT (LCM, DT 6): 1 SW_REF 2 COURTESY_SIG 3 DEFEAT_SIG 4 DIM_SIG 5 DIM_REF 6 spare (old switch pigtail)
+ J-HMI (LCM, DT 4): 1 +5V 2 GND 3 CANH 4 CANL
+ If measured decorative current or as-built lengths fail the tool, move VDECO/PGND from T1 to a separate
+ DTP 2-way (size 12 contacts, 12 AWG) and use the freed T1 pins as spares.
 ```
 
 ## ESP32-S3 (LCM) pin budget
 
-| Function | Count |
-|---|---|
-| PWM1–3, AUX_L, AUX_R | 5 |
-| ALLOW_L/R, MCU_OK, DIAG_EN, DIAG_SEL, WD_KICK, WD_EN | 7 |
-| PR1–PR6 interior/dimmer photorelays | 6 |
-| ADC: IS ×4, VDECO, VCTRL, NTC_L, NTC_R, NTC_BOARD | 9 (ADC1) |
-| Digital in: IGN_OK, HI_REQ, TURN_L/R, RLY ×4, MKR_BUS, AMB_PARK_L/R | 11 |
-| CAN TX/RX | 2 |
-| **Total** | **40**. Tight on ESP32-S3-WROOM-1: move PR1–PR6 and the DIAG lines to an I²C GPIO expander (automotive-grade, e.g. TCA9535-Q1 class, [UNVERIFIED]) if routing gets tight |
+PWM ×5, ALLOW_L/R, DIAG_EN/SEL, WD_KICK/EN (6), PR1–PR6 (6), ADC ×9 (IS ×4, VDECO, VCTRL, NTC ×3),
+inputs: IGN_OK, HI_REQ, TURN_L/R_SNS, RLY ×4 (8), CAN ×2 → **36**. Feasible on WROOM-1. Put PR1–PR6
+on an I²C expander if routing is tight.

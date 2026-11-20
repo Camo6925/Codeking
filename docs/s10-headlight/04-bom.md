@@ -1,61 +1,39 @@
-# Deliverable 4 – Preliminary Bill of Materials (Rev C)
+# Deliverable 4 – Preliminary Bill of Materials (Rev D)
 
-The machine-readable BOM is [`bom.csv`](bom.csv) (50 lines). This page summarizes it.
-
-**Pricing policy:** a price appears only when it was seen on a real listing on 2026-11-20 (tagged
-[SECONDARY]). Everything else is **TBD**. No prices have been estimated or invented.
+The machine-readable BOM is [`bom.csv`](bom.csv) (50 lines). Prices appear only where a real listing
+was seen on 2026-11-20 ([SECONDARY]). Everything else is **TBD**; nothing has been estimated.
 
 ## Priced so far
 
 | Item | Description | Qty | Unit | Extended | Source |
 |---|---|---|---|---|---|
-| 1 | HELLA L4060 90 mm LED low beam (012488121) | 2 | $298.57 | $597.14 | partshubdirect.com |
-| 2 | HELLA L4060 90 mm LED high beam (011988031) | 2 | $215.45 | $430.90 | partshubdirect.com |
-| 16 | TI LMR36015-Q1 buck | 2 | $4.10 | $8.20 | Digi-Key |
-| 6 | Blue Sea 5191 MRBF terminal fuse block (top post) | 1 | $37.99 | $37.99 | currentconnected.com |
-| 34 | Diode Dynamics FlexLight Cool White (honeycomb) | 2 | $39.96 | $79.92 | diodedynamics.com |
-| 35 | Diode Dynamics FlexLight Cool White (DRL) | 2 | $39.96 | $79.92 | diodedynamics.com |
+| 1 | HELLA L4060 low beam (012488121) | 2 | $298.57 | $597.14 | partshubdirect.com |
+| 2 | HELLA L4060 high beam (011988031) | 2 | $215.45 | $430.90 | partshubdirect.com |
+| 5 | Diode Dynamics FlexLight Cool White (honeycomb) | 2 | $39.96 | $79.92 | diodedynamics.com |
+| 6 | Diode Dynamics FlexLight Cool White (DRL) | 2 | $39.96 | $79.92 | diodedynamics.com |
+| 9 | Blue Sea 5191 MRBF terminal block | 1 | $37.99 | $37.99 | currentconnected.com |
+| 23 | TI LMR36015-Q1 buck | 2 | $4.10 | $8.20 | Digi-Key |
 | | **Verified-price subtotal** | | | **$1,234.07** | |
 
-Other reference prices seen: HELLA plain L4060 high beam $335.28 (fiperformance.com); Blue Sea 5191
-MRBF block $37.99 (currentconnected.com, top-post only); Eaton RTMR 15305-1 20-fuse base with cover
-$37 (connectorconcepts.com).
+The SS3 Sport amber pods (item 4) still need a price. The only SS3 price seen was the White **Pro**
+pair at $399.95, which isn't the model specified.
 
-The projectors dominate the cost: about 98 % of the priced items. Every other required item is a
-commodity automotive part, but it stays TBD until it has an exact part number.
+## Groups
 
-## Required components by group
-
-| Group | Items (bom.csv) | Status |
+| Group | Items | Notes |
 |---|---|---|
-| Projectors | 1–3 | Family verified; **confirm SAE/DOT variant** and mounting kit |
-| HMI | 4 | Specs verified; price TBD |
-| Distribution & protection | 5–11 | RTMR configuration and side-post fuse holder TBD |
-| Lighting Control Module (custom PCB, inside PDCC) | 12–25 | Key ICs verified; PROFET variant waits on O-4 |
-| Connectors | 26–30 | DT family chosen; contact P/Ns per gauge |
-| Wire & loom | 31–32 | Gauges provisional |
-| Sensors | 33 | NTC part TBD |
-| Decorative LEDs | 34–35 | Diode Dynamics FlexLight selected; current and PWM bench test pending |
-| Required amber lamps (park/turn pod, side marker) | 36, 43 | Truck-Lite 4050A + 10250Y selected; prices TBD |
-| PDCC enclosure, amber OR diodes, fail-ON driver, dimmer ladder | 44–47 | Rev B/C additions |
-| Interior photorelays, fuse taps | 48–49 | Rev C additions |
-| Vehicle interface | 37 | LED flasher **open (O-7)** |
-| Housing | 38 | Vent part TBD |
+| Projectors | 1–3 | Confirm variant and mounting kit |
+| Amber pod | 4 | SS3 Sport yellow with amber backlight |
+| Decorative | 5–6 | FlexLight; current and PWM bench test pending |
+| HMI | 7 | Waveshare 4.3B |
+| **Independent fuse/relay box (FRB)** | 8–14 | RTMR configuration with ≥ 22 fuses / ≥ 7 relays |
+| **Turn Interface Module (TIM)** | 15–18 | Opto inputs + dual PROFET; carry a spare |
+| Lighting Control Module (LCM) | 19–33 | Separate module in the cab |
+| Connectors | 34–39 | DT family throughout |
+| Vehicle interface | 40–41 | Fuse taps; electronic flasher |
+| Wire, sensors, housing | 42–45 | |
+| Optional | 46–49 | Projector current sense, fans, compact projectors, GPIO expander |
+| Tooling | 50 | Plus open-barrel crimper, heat gun, DMM, clamp meter, scope, bench supply |
 
-## Optional upgrades (separate from required)
-
-| Item | Description | When needed |
-|---|---|---|
-| 39 | Projector current sensing ×4 (shunt + INA180-Q1) | Phase 2: detects a failed projector module, not only a failed fuse or relay |
-| 40 | Housing cooling fans on AUX channels | Only if the thermal test (D7 §7.8) shows the housing exceeds limits with low + high on |
-| 41 | HELLA Module 60 LED (compact) | Only if the 90 mm modules don't fit (O-3) |
-
-## Tooling (one-time)
-
-| Item | Description |
-|---|---|
-| 42 | Deutsch HDT-48-00 solid-contact crimp tool |
-| — | Open-barrel terminal crimper (for RTMR terminals, per Eaton spec) |
-| — | Heat gun, adhesive-lined heat shrink |
-| — | DC clamp meter, multimeter, oscilloscope with current probe (needed for inrush measurements) |
-| — | Bench supply 0–30 V / ≥ 10 A with current limit (needed for validation) |
+Removed in Rev D: Truck-Lite 4050A and 10250Y, the fail-ON amber relay with its driver and OR diodes,
+the marker relay and fuses, and the combined PDCC enclosure.

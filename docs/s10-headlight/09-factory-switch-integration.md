@@ -1,8 +1,9 @@
-# Factory Headlamp Switch Removal & Vehicle Integration (Rev C)
+# Factory Headlamp Switch Removal & Vehicle Integration (Rev D)
 
 Owner decisions: the factory headlamp switch is **removed** (D-1). **Everything**, including interior
 lighting and dash illumination, is controlled from the touchscreen (D-7). The high-beam dash indicator
-is **not** required by the owner (D-6).
+is **not** required by the owner (D-6). The lighting system has its own independent fuse box, and
+factory circuits supply **signals only** (D-12). Off-road vehicle (D-9).
 
 Sources: owner forum reports and fuse-box documentation (all **[SECONDARY]**). Two independent reports
 (1999 and 2002, same generation as the 2001) give the same switch wire colours. Every item still gets
@@ -48,19 +49,22 @@ preserved.
 * With the ignition off, the LCM and touchscreen are asleep, so interior lighting is controlled by the
   doors through the BCM, exactly as stock. Touchscreen interior control works whenever the ignition is on.
 
-## 3. Front turn signals (picked up at the underhood fuse block)
+## 3. Front turn signals (signal pickup only)
 
 The 1999–2004 underhood fuse block has **separate front-turn fuses**: `LT TURN` (left front) and
 `RT TURN` (right front), distinct from the rear `LT TRN` / `RT TRN`. **[SECONDARY, fuse-box.info]**
 
-* Install an **add-a-circuit fuse tap** in each of `LT TURN` and `RT TURN`. Keep the factory fuse in the
-  lower slot and fit a 2 A fuse for the new branch in the upper slot. Match the tap to the block's fuse
-  type (mini vs ATO): **look**.
-* The two tap wires (18 AWG) run with the headlamp harness through the firewall grommet to J-VEH
-  `TURN_L` / `TURN_R`. Inside the PDCC each goes to its headlamp's pin 7 (Truck-Lite 4050A TURN input)
-  and to the LCM sense input.
+* Install an **add-a-circuit fuse tap** with a **1 A** fuse in each of `LT TURN` and `RT TURN`. The
+  tap wire carries only the optocoupler input current (≈1 mA). It is a signal, not lamp power. Match
+  the tap to the block's fuse type (mini vs ATO).
+* The tap wires run a short distance to the FRB `J-TURN` connector → **Turn Interface Module**: an
+  optocoupler (galvanic isolation) switches a smart high-side switch powered from FRB fuse F10
+  (always hot), which drives the SS3 main beam through F17/F18. A second opto channel gives the LCM
+  an isolated turn status.
+* Hazards work with the key off; turn timing stays under the factory flasher.
 * The factory forward wires to the removed front lamps become dead ends: insulate and seal them.
-* The 4050A turn draw is 0.38 A [SECONDARY]. If the flash rate changes, fit an LED-compatible flasher (O-7).
+* The factory flasher now sees almost no load, so a **load-independent electronic flasher** is
+  required (O-7).
 
 ## 4. Factory items removed or disabled (underhood fuse block unless noted)
 
@@ -68,16 +72,16 @@ The 1999–2004 underhood fuse block has **separate front-turn fuses**: `LT TURN
 |---|---|---|
 | `DRL` | Remove | Disables series-high-beam DRL and automatic headlamps |
 | `HDLP PWR`, `LT HDLP`, `RT HDLP` | Remove | Old headlamp circuits are abandoned |
-| `F PRK` (front parking lamp) | Remove | Front park lamps are now the Truck-Lite 4050A driven by the PDCC |
+| `F PRK` (front parking lamp) | Remove | Factory front park lamps are removed; the SS3 backlight is driven by the LCM |
 | `LR PRK`, `RR PRK`, `PARKLP` | **Keep** | Rear park/tail lamps, commanded by K7 |
-| `LT TURN`, `RT TURN` | Keep, with fuse taps (§3) | Front turn pickup |
+| `LT TURN`, `RT TURN` | Keep, with 1 A fuse taps (§3) | Front turn **signal** pickup |
 | Factory headlamp relay | Remove | Nothing should energize the old headlamp circuit |
 | Headlamp switch | Unplug and store | Replaced by pigtail + touchscreen |
-| High-beam dash indicator | Not connected (owner decision D-6) | The touchscreen shows a high-beam icon from HI_REQ. Note: FMVSS 108 requires an upper-beam indicator; the touchscreen icon is the intended substitute, so confirm it satisfies your state inspection. |
+| High-beam dash indicator | Not connected (owner decision D-6) | The touchscreen shows a high-beam icon from HI_REQ |
 
 **Ignition tap for K1 (IP fuse block):** use a fuse tap on IP fuse **11** "Cluster, Engine Control
 Module" (an ignition-fed circuit). Alternative: fuse **15** "4WD switch, Engine controls". The tap
-carries only the K1 coil (≈0.15 A) through F0 1 A. Confirm in §5.1 that it stays hot in CRANK.
+carries only the K1 coil (≈0.15 A, a signal-level enable) through F0 1 A; K1's contacts switch FRB power. Confirm in §5.1 that it stays hot in CRANK.
 
 Interior-related IP fuses for reference: **8** "Courtesy Lamps, Inadvertent Power Relay", **12**
 "Interior Lights", **5** "Parking Lamps, … BCM, Ashtray Lamp". Leave all installed.
